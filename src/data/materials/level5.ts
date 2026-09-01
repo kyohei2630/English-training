@@ -1,0 +1,132 @@
+import type { ReadingMaterial } from '../../types';
+
+export const level5Materials: ReadingMaterial[] = [
+  {
+    id: 'l5-001',
+    level: 5,
+    category: 'abstract',
+    title: 'Abstract: Effect of Stent Design on Local Blood Flow',
+    topic: 'Research English — Abstract',
+    estimatedMinutes: 7,
+    content: [
+      'Background: Coronary stents are widely used to treat arterial stenosis, yet the relationship between stent strut geometry and local hemodynamics remains incompletely understood.',
+      'Methods: We used computational fluid dynamics (CFD) to simulate blood flow through three stent designs with different strut thicknesses. Wall shear stress (WSS) distributions were compared across models using an idealized coronary artery geometry.',
+      'Results: Thicker struts were associated with larger regions of low WSS immediately downstream of each strut, a pattern previously linked to increased risk of restenosis. The thinnest strut design produced the most uniform WSS distribution.',
+      'Conclusion: These findings suggest that strut thickness meaningfully affects local flow disturbance and may inform future stent design aimed at reducing restenosis risk. Further in vivo studies are needed to confirm these computational findings.',
+    ],
+    vocabulary: [
+      { word: 'strut', partOfSpeech: 'noun', meaningJa: 'ストラット（ステントの支柱）', example: 'The stent has thin struts.' },
+      { word: 'wall shear stress', partOfSpeech: 'noun', meaningJa: '壁面せん断応力', example: 'Low wall shear stress is linked to restenosis.' },
+      { word: 'restenosis', partOfSpeech: 'noun', meaningJa: '再狭窄', example: 'Restenosis can occur after stent placement.' },
+      { word: 'in vivo', partOfSpeech: 'phrase', meaningJa: '生体内で', example: 'In vivo studies are needed to confirm the results.' },
+    ],
+    grammarPoints: [
+      {
+        sentence: 'These findings suggest that strut thickness meaningfully affects local flow disturbance.',
+        translationJa: 'これらの知見は、ストラットの太さが局所的な流れの乱れに意味のある影響を与えることを示唆している。',
+        subject: 'These findings',
+        verb: 'suggest',
+        object: 'that strut thickness meaningfully affects local flow disturbance',
+        notes: ['研究英語頻出表現: findings suggest that 〜（結果が〜を示唆する）'],
+      },
+      {
+        sentence: 'Thicker struts were associated with larger regions of low WSS immediately downstream of each strut.',
+        translationJa: '太いストラットは、各ストラットのすぐ下流にある低WSSの広い領域と関連していた。',
+        subject: 'Thicker struts',
+        verb: 'were associated',
+        modifiers: ['with larger regions of low WSS', 'immediately downstream of each strut'],
+        notes: ['be associated with 〜 は「〜と関連している」という結果表現の定型句'],
+      },
+    ],
+  },
+  {
+    id: 'l5-002',
+    level: 5,
+    category: 'introduction',
+    title: 'Introduction: Wearable Sensors for Cardiac Monitoring',
+    topic: 'Research English — Introduction',
+    estimatedMinutes: 7,
+    content: [
+      'Cardiovascular disease remains the leading cause of death worldwide, and early detection of abnormal cardiac rhythms is critical for reducing mortality. Traditional electrocardiogram (ECG) monitoring, however, typically requires patients to visit a clinic, which limits the amount of continuous data that can be collected.',
+      'In recent years, wearable sensors have emerged as a promising alternative, allowing continuous monitoring of heart rate and rhythm outside the hospital setting. Several studies have reported that wearable devices can detect atrial fibrillation with accuracy comparable to conventional ECG in controlled settings.',
+      'Despite this progress, questions remain regarding the reliability of wearable sensors during physical activity, when motion artifacts are known to reduce signal quality. Few studies to date have systematically evaluated sensor performance across a range of activity levels.',
+      'The present study therefore aims to evaluate the accuracy of a commercially available wearable ECG sensor during rest, walking, and moderate exercise, in order to clarify the conditions under which such devices can be reliably used for clinical decision-making.',
+    ],
+    vocabulary: [
+      { word: 'mortality', partOfSpeech: 'noun', meaningJa: '死亡率', example: 'Early detection reduces mortality.' },
+      { word: 'atrial fibrillation', partOfSpeech: 'noun', meaningJa: '心房細動', example: 'Wearable devices can detect atrial fibrillation.' },
+      { word: 'motion artifact', partOfSpeech: 'noun', meaningJa: '体動アーチファクト', example: 'Motion artifacts reduce signal quality.' },
+      { word: 'aim to', partOfSpeech: 'phrase', meaningJa: '〜することを目的とする', example: 'This study aims to evaluate device accuracy.' },
+    ],
+    grammarPoints: [
+      {
+        sentence: 'The present study therefore aims to evaluate the accuracy of a commercially available wearable ECG sensor during rest, walking, and moderate exercise.',
+        translationJa: 'そこで本研究は、安静時・歩行時・中等度運動時における市販のウェアラブルECGセンサーの精度を評価することを目的とする。',
+        subject: 'The present study',
+        verb: 'aims',
+        object: 'to evaluate the accuracy of a commercially available wearable ECG sensor',
+        modifiers: ['therefore', 'during rest, walking, and moderate exercise'],
+        notes: ['Introduction の結び頻出表現: The present study aims to 〜（本研究は〜を目的とする）'],
+      },
+    ],
+  },
+  {
+    id: 'l5-003',
+    level: 5,
+    category: 'methods',
+    title: 'Methods: Evaluating Catheter Tip Pressure Sensors',
+    topic: 'Research English — Methods',
+    estimatedMinutes: 7,
+    content: [
+      'Ten catheter-tip pressure sensors from the same manufacturer were tested using a calibrated pressure chamber. Each sensor was placed in the chamber, and pressure was increased in increments of 10 mmHg from 0 to 200 mmHg while output voltage was recorded.',
+      'Measurements were repeated five times for each sensor to assess reproducibility. Linearity was evaluated by calculating the coefficient of determination (R²) between applied pressure and sensor output for each trial.',
+      'To assess temperature sensitivity, a subset of five sensors was additionally tested at 25°C, 32°C, and 37°C, since catheters are typically used at body temperature rather than room temperature. All statistical analyses were performed using standard software, and a p-value of less than 0.05 was considered statistically significant.',
+    ],
+    vocabulary: [
+      { word: 'increment', partOfSpeech: 'noun', meaningJa: '増分', example: 'Pressure was increased in increments of 10 mmHg.' },
+      { word: 'reproducibility', partOfSpeech: 'noun', meaningJa: '再現性', example: 'Measurements were repeated to assess reproducibility.' },
+      { word: 'linearity', partOfSpeech: 'noun', meaningJa: '直線性', example: 'Linearity was evaluated using R-squared.' },
+      { word: 'statistically significant', partOfSpeech: 'phrase', meaningJa: '統計学的に有意な', example: 'A p-value below 0.05 was considered statistically significant.' },
+    ],
+    grammarPoints: [
+      {
+        sentence: 'Pressure was increased in increments of 10 mmHg from 0 to 200 mmHg while output voltage was recorded.',
+        translationJa: '圧力は0から200 mmHgまで10 mmHgずつ段階的に上げられ、その間出力電圧が記録された。',
+        subject: 'Pressure',
+        verb: 'was increased',
+        modifiers: ['in increments of 10 mmHg', 'from 0 to 200 mmHg', 'while output voltage was recorded'],
+        notes: ['Methods セクションは受動態（was/were + 過去分詞）で手順を客観的に記述するのが基本'],
+      },
+    ],
+  },
+  {
+    id: 'l5-004',
+    level: 5,
+    category: 'discussion',
+    title: 'Discussion: Interpreting Unexpected Results',
+    topic: 'Research English — Discussion',
+    estimatedMinutes: 7,
+    content: [
+      'Contrary to our initial hypothesis, no significant difference in wall shear stress was observed between the two catheter designs tested in this study. One possible explanation for this finding is that the flow rates used in our experimental setup were lower than those typically encountered in vivo.',
+      'This result is broadly consistent with a previous study, which similarly reported minimal differences between catheter geometries under low-flow conditions. However, our findings differ from those of another group, who observed measurable differences using a pulsatile flow model rather than the steady flow model used here.',
+      'This discrepancy suggests that flow conditions, rather than catheter geometry alone, may play a dominant role in determining local hemodynamic effects. Future studies incorporating pulsatile flow would help clarify whether our findings hold under more physiologically realistic conditions.',
+      'Several limitations should be acknowledged. First, this study used an idealized vessel geometry rather than a patient-specific model. Second, the sample size was relatively small, which may have limited our ability to detect subtle differences between designs.',
+    ],
+    vocabulary: [
+      { word: 'hypothesis', partOfSpeech: 'noun', meaningJa: '仮説', example: 'The results were contrary to our initial hypothesis.' },
+      { word: 'consistent with', partOfSpeech: 'phrase', meaningJa: '〜と一致する', example: 'This result is consistent with previous studies.' },
+      { word: 'discrepancy', partOfSpeech: 'noun', meaningJa: '食い違い、不一致', example: 'This discrepancy needs further explanation.' },
+      { word: 'limitation', partOfSpeech: 'noun', meaningJa: '限界、制約', example: 'Several limitations should be acknowledged.' },
+    ],
+    grammarPoints: [
+      {
+        sentence: 'Contrary to our initial hypothesis, no significant difference in wall shear stress was observed between the two catheter designs.',
+        translationJa: '当初の仮説に反して、2つのカテーテル設計間で壁面せん断応力に有意な差は観察されなかった。',
+        subject: 'no significant difference in wall shear stress',
+        verb: 'was observed',
+        modifiers: ['Contrary to our initial hypothesis', 'between the two catheter designs'],
+        notes: ['Discussion 冒頭の定型表現: Contrary to our (initial) hypothesis, 〜（仮説に反して）'],
+      },
+    ],
+  },
+];

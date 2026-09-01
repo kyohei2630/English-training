@@ -1,0 +1,68 @@
+import type { UnderstandingQuestion } from '../../types';
+
+export const level5Questions: UnderstandingQuestion[] = [
+  {
+    id: 'q-l5-001-1',
+    materialId: 'l5-001',
+    question: 'Which strut design produced the most uniform WSS distribution?',
+    choices: ['The thickest strut', 'The thinnest strut', 'The medium strut', 'None of them'],
+    correctIndex: 1,
+    explanation: '"The thinnest strut design produced the most uniform WSS distribution." とあります。',
+  },
+  {
+    id: 'q-l5-001-2',
+    materialId: 'l5-001',
+    question: 'What method did the researchers use to simulate blood flow?',
+    choices: ['In vivo animal testing', 'Computational fluid dynamics (CFD)', 'Patient interviews', 'Ultrasound imaging'],
+    correctIndex: 1,
+    explanation: '"We used computational fluid dynamics (CFD) to simulate blood flow" とあります。',
+  },
+  {
+    id: 'q-l5-002-1',
+    materialId: 'l5-002',
+    question: 'What limits traditional ECG monitoring, according to the passage?',
+    choices: ['It is too expensive', 'It requires a clinic visit', 'It is inaccurate', 'It takes too long to set up'],
+    correctIndex: 1,
+    explanation: '"Traditional ECG monitoring ... typically requires patients to visit a clinic, which limits the amount of continuous data" とあります。',
+  },
+  {
+    id: 'q-l5-002-2',
+    materialId: 'l5-002',
+    question: 'What does the study aim to evaluate?',
+    choices: ['The cost of wearable sensors', 'Sensor accuracy during different activities', 'Patient satisfaction', 'Battery life of devices'],
+    correctIndex: 1,
+    explanation: '"aims to evaluate the accuracy of a commercially available wearable ECG sensor during rest, walking, and moderate exercise" とあります。',
+  },
+  {
+    id: 'q-l5-003-1',
+    materialId: 'l5-003',
+    question: 'How many times were measurements repeated for each sensor?',
+    choices: ['Three times', 'Five times', 'Ten times', 'Once'],
+    correctIndex: 1,
+    explanation: '"Measurements were repeated five times for each sensor" とあります。',
+  },
+  {
+    id: 'q-l5-003-2',
+    materialId: 'l5-003',
+    question: 'What temperatures were used to test temperature sensitivity?',
+    choices: ['0°C, 10°C, 20°C', '25°C, 32°C, 37°C', '37°C only', '15°C, 25°C, 35°C'],
+    correctIndex: 1,
+    explanation: '"tested at 25°C, 32°C, and 37°C" とあります。',
+  },
+  {
+    id: 'q-l5-004-1',
+    materialId: 'l5-004',
+    question: 'What was the possible explanation offered for the unexpected result?',
+    choices: ['The sensors were broken', 'The flow rates were lower than in vivo', 'The catheters were too long', 'The software had a bug'],
+    correctIndex: 1,
+    explanation: '"the flow rates used in our experimental setup were lower than those typically encountered in vivo" とあります。',
+  },
+  {
+    id: 'q-l5-004-2',
+    materialId: 'l5-004',
+    question: 'What was one limitation mentioned in the passage?',
+    choices: ['The study used a patient-specific model', 'The sample size was relatively small', 'The equipment was too expensive', 'There were too many researchers'],
+    correctIndex: 1,
+    explanation: '"the sample size was relatively small, which may have limited our ability to detect subtle differences" とあります。',
+  },
+];

@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-scale: 1;
+  color-scheme: light;
+}
+
+html[data-font-size='sm'] {
+  --font-scale: 0.9;
+}
+html[data-font-size='md'] {
+  --font-scale: 1;
+}
+html[data-font-size='lg'] {
+  --font-scale: 1.15;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-size: calc(1rem * var(--font-scale));
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+/* Comfortable reading measure for long English passages on iPad */
+.reading-prose {
+  max-width: 68ch;
+}
+
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}

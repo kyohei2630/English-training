@@ -1,0 +1,51 @@
+import type { WritingExercise } from '../../types';
+
+export const level4Writing: WritingExercise[] = [
+  {
+    id: 'w-l4-001',
+    level: 4,
+    type: 'fillblank',
+    instructionJa: '空欄に入る最も適切な語を答えましょう。',
+    sentence: 'Blood flow is ___ by vessel geometry.',
+    answers: ['influenced'],
+    translationJa: '血流は血管の形状によって影響を受けます。',
+    hint: '受動態 be + 過去分詞 + by',
+  },
+  {
+    id: 'w-l4-002',
+    level: 4,
+    type: 'fillblank',
+    instructionJa: '空欄に入る最も適切な語を答えましょう。',
+    sentence: 'Gas exchange takes place ___ the alveoli.',
+    answers: ['in'],
+    translationJa: 'ガス交換は肺胞で行われます。',
+    hint: '場所を表す前置詞',
+  },
+  {
+    id: 'w-l4-003',
+    level: 4,
+    type: 'translate',
+    instructionJa: '次の日本語を英語にしましょう。',
+    promptJa: '心臓は4つの部屋に分かれています。',
+    sampleAnswers: ['The heart is divided into four chambers.'],
+    keyPoints: ['be divided into 〜', 'chamber'],
+  },
+  {
+    id: 'w-l4-004',
+    level: 4,
+    type: 'translate',
+    instructionJa: '次の日本語を英語にしましょう。',
+    promptJa: '臨床工学技士は人工呼吸器を維持する責任があります。',
+    sampleAnswers: ['Clinical engineers are responsible for maintaining ventilators.'],
+    keyPoints: ['be responsible for + 動名詞', 'maintain'],
+  },
+  {
+    id: 'w-l4-005',
+    level: 4,
+    type: 'translate',
+    instructionJa: '次の日本語を英語にしましょう。',
+    promptJa: '狭窄部位では血流速度が上昇し、圧力が低下します。',
+    sampleAnswers: ['At a site of stenosis, blood velocity increases and pressure decreases.'],
+    keyPoints: ['at a site of 〜', 'increase / decrease'],
+  },
+];
