@@ -1,8 +1,8 @@
-import type { Level, ReadingMaterial, WritingExercise } from '../types';
+import type { GrammarQuestion, Level, ReadingMaterial, UnderstandingQuestion, WritingExercise } from '../types';
 import { LEVELS } from '../data/levels';
-import { MATERIALS_BY_LEVEL } from '../data/materials';
-import { WRITING_BY_LEVEL } from '../data/writing';
-import { getQuestionsForMaterial } from '../data/questions';
+import { loadReadingLevel } from '../data/reading/loader';
+import { loadWritingLevel } from '../data/writing/loader';
+import { loadGrammarLevel } from '../data/grammar/loader';
 
 interface LevelRange {
   level: Level;
@@ -41,17 +41,26 @@ export interface DailyPlan {
   level: Level;
   reading: ReadingMaterial;
   writing: WritingExercise[];
+  grammarQuestions: GrammarQuestion[];
 }
 
-export function getDailyPlan(day: number): DailyPlan {
+const GRAMMAR_PER_DAY = 6;
+
+/** Loads only the current day's level content (one dynamic import per content
+ * type), so studying Day 5 never pulls Level 4-6 data into memory. */
+export async function getDailyPlan(day: number): Promise<DailyPlan> {
   const level = getLevelForDay(day);
   const startDay = getLevelStartDay(level);
   const indexInLevel = Math.max(0, day - startDay);
 
-  const materials = MATERIALS_BY_LEVEL[level];
+  const [{ materials }, writingPool, { questions: grammarPool }] = await Promise.all([
+    loadReadingLevel(level),
+    loadWritingLevel(level),
+    loadGrammarLevel(level),
+  ]);
+
   const reading = materials[indexInLevel % materials.length];
 
-  const writingPool = WRITING_BY_LEVEL[level];
   const writingPerDay = 2;
   const writing: WritingExercise[] = [];
   for (let i = 0; i < writingPerDay; i++) {
@@ -59,10 +68,19 @@ export function getDailyPlan(day: number): DailyPlan {
     writing.push(writingPool[idx]);
   }
 
-  return { day, level, reading, writing };
+  const grammarQuestions: GrammarQuestion[] = [];
+  if (grammarPool.length > 0) {
+    for (let i = 0; i < GRAMMAR_PER_DAY; i++) {
+      const idx = (indexInLevel * GRAMMAR_PER_DAY + i) % grammarPool.length;
+      grammarQuestions.push(grammarPool[idx]);
+    }
+  }
+
+  return { day, level, reading, writing, grammarQuestions };
 }
 
-export function getUnderstandingQuestionsForDay(day: number) {
-  const plan = getDailyPlan(day);
-  return getQuestionsForMaterial(plan.reading.id);
+export async function getUnderstandingQuestionsForDay(day: number): Promise<UnderstandingQuestion[]> {
+  const plan = await getDailyPlan(day);
+  const { questions } = await loadReadingLevel(plan.level);
+  return questions.filter((q) => q.materialId === plan.reading.id);
 }

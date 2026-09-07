@@ -18,13 +18,19 @@ export const DEFAULT_PROGRESS: UserProgress = {
   reviewCorrect: 0,
   weakWords: [],
   weakGrammar: [],
+  vocabularyMastered: 0,
+  grammarAttempted: 0,
+  grammarCorrect: 0,
+  toeicMockTestsTaken: 0,
 };
 
 export async function getProgress(): Promise<UserProgress> {
   try {
     const db = await getDB();
     const value = await db.get('progress', KEY);
-    return value ?? DEFAULT_PROGRESS;
+    // spread defaults first so progress records saved before this update
+    // (missing vocabularyMastered / grammarAttempted / etc.) still load safely
+    return value ? { ...DEFAULT_PROGRESS, ...value } : DEFAULT_PROGRESS;
   } catch (err) {
     console.error('Failed to read progress from IndexedDB', err);
     return DEFAULT_PROGRESS;

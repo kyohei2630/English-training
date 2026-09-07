@@ -5,9 +5,10 @@ import Card from '../components/common/Card';
 import StepDots from '../components/layout/StepDots';
 import ReadingView from '../components/reading/ReadingView';
 import UnderstandingQuiz from '../components/reading/UnderstandingQuiz';
+import GrammarSession from '../components/grammar/GrammarSession';
 import WritingSession from '../components/writing/WritingSession';
 import ReviewSession from '../components/review/ReviewSession';
-import { getDailyPlan, getUnderstandingQuestionsForDay } from '../services/curriculum';
+import { getDailyPlan, getUnderstandingQuestionsForDay, type DailyPlan } from '../services/curriculum';
 import {
   getOrCreateTodaySession,
   markSectionProgress,
@@ -15,13 +16,13 @@ import {
 } from '../services/sessionService';
 import { getDueReviewItems } from '../db/repositories/reviewRepository';
 import { todayLocalISODate } from '../utils/date';
-import type { LearningSession, ReviewItem, SectionKey } from '../types';
+import type { LearningSession, ReviewItem, SectionKey, UnderstandingQuestion } from '../types';
 
 type Step = SectionKey | 'complete';
 
 const STEP_LABELS: Record<SectionKey, string> = {
   reading: 'Reading',
-  understanding: 'Understanding',
+  grammar: 'Grammar',
   writing: 'Writing',
   review: 'Review',
 };
@@ -33,7 +34,10 @@ function elapsedMinutesSince(startedAt: number): number {
 export default function TrainingPage() {
   const navigate = useNavigate();
   const [session, setSession] = useState<LearningSession | null>(null);
+  const [plan, setPlan] = useState<DailyPlan | null>(null);
+  const [questions, setQuestions] = useState<UnderstandingQuestion[]>([]);
   const [step, setStep] = useState<Step>('reading');
+  const [readingPhase, setReadingPhase] = useState<'passage' | 'quiz'>('passage');
   const [dueReviewItems, setDueReviewItems] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const stepStartRef = useRef(Date.now());
@@ -44,43 +48,52 @@ export default function TrainingPage() {
       setSession(s);
       const firstIncomplete = (Object.keys(STEP_LABELS) as SectionKey[]).find((k) => !s.sectionsDone[k]);
       setStep(firstIncomplete ?? 'complete');
-      const due = await getDueReviewItems(todayLocalISODate());
+      const [dailyPlan, dailyQuestions, due] = await Promise.all([
+        getDailyPlan(s.day),
+        getUnderstandingQuestionsForDay(s.day),
+        getDueReviewItems(todayLocalISODate()),
+      ]);
+      setPlan(dailyPlan);
+      setQuestions(dailyQuestions);
       setDueReviewItems(due);
       setLoading(false);
       stepStartRef.current = Date.now();
     })();
   }, []);
 
-  if (loading || !session) {
+  if (loading || !session || !plan) {
     return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
   }
-
-  const plan = getDailyPlan(session.day);
-  const questions = getUnderstandingQuestionsForDay(session.day);
 
   const goToStep = (next: Step) => {
     stepStartRef.current = Date.now();
     setStep(next);
   };
 
-  const finishReading = async () => {
+  const finishReadingPassage = () => {
+    setReadingPhase('quiz');
+  };
+
+  const finishReading = async (correct: number, total: number) => {
     const minutes = elapsedMinutesSince(stepStartRef.current);
     const updated = await markSectionProgress('reading', {
       sectionsDone: { ...session.sectionsDone, reading: true },
       minutesSpent: { ...session.minutesSpent, reading: minutes },
-    });
-    setSession(updated);
-    goToStep('understanding');
-  };
-
-  const finishUnderstanding = async (correct: number, total: number) => {
-    const minutes = elapsedMinutesSince(stepStartRef.current);
-    const updated = await markSectionProgress('understanding', {
-      sectionsDone: { ...session.sectionsDone, understanding: true },
-      minutesSpent: { ...session.minutesSpent, understanding: minutes },
       readingCorrect: correct,
       readingTotal: total,
       materialsCompleted: [...session.materialsCompleted, plan.reading.id],
+    });
+    setSession(updated);
+    goToStep('grammar');
+  };
+
+  const finishGrammar = async (correct: number, total: number) => {
+    const minutes = elapsedMinutesSince(stepStartRef.current);
+    const updated = await markSectionProgress('grammar', {
+      sectionsDone: { ...session.sectionsDone, grammar: true },
+      minutesSpent: { ...session.minutesSpent, grammar: minutes },
+      grammarCorrect: correct,
+      grammarTotal: total,
     });
     setSession(updated);
     goToStep('writing');
@@ -119,7 +132,7 @@ export default function TrainingPage() {
   }));
 
   const totalMinutes =
-    session.minutesSpent.reading + session.minutesSpent.understanding + session.minutesSpent.writing + session.minutesSpent.review;
+    session.minutesSpent.reading + session.minutesSpent.grammar + session.minutesSpent.writing + session.minutesSpent.review;
 
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50 dark:bg-slate-950">
@@ -138,16 +151,20 @@ export default function TrainingPage() {
       </header>
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
-        {step === 'reading' && (
+        {step === 'reading' && readingPhase === 'passage' && (
           <div className="flex flex-col gap-5">
             <ReadingView material={plan.reading} />
-            <Button size="lg" onClick={finishReading}>
+            <Button size="lg" onClick={finishReadingPassage}>
               理解度チェックへ進む
             </Button>
           </div>
         )}
 
-        {step === 'understanding' && <UnderstandingQuiz questions={questions} onComplete={finishUnderstanding} />}
+        {step === 'reading' && readingPhase === 'quiz' && (
+          <UnderstandingQuiz questions={questions} level={plan.level} onComplete={finishReading} />
+        )}
+
+        {step === 'grammar' && <GrammarSession questions={plan.grammarQuestions} onComplete={finishGrammar} />}
 
         {step === 'writing' && <WritingSession exercises={plan.writing} onComplete={finishWriting} />}
 
@@ -171,7 +188,7 @@ export default function TrainingPage() {
             <p className="text-lg text-slate-500 dark:text-slate-400">{totalMinutes} min</p>
             <ul className="flex flex-col gap-1 text-left text-sm">
               <li>Reading ✓</li>
-              <li>Understanding ✓</li>
+              <li>Grammar ✓</li>
               <li>Writing ✓</li>
               <li>Review ✓</li>
             </ul>

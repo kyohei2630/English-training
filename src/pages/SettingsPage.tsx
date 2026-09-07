@@ -7,7 +7,9 @@ import { LEVELS } from '../data/levels';
 import { buildExportBundle, downloadExportBundle, importExportBundle, ImportValidationError } from '../services/exportImport';
 import { deleteAllSessions } from '../db/repositories/sessionRepository';
 import { deleteAllReviewItems } from '../db/repositories/reviewRepository';
+import { deleteAllToeicResults } from '../db/repositories/toeicResultRepository';
 import { resetProgress } from '../db/repositories/progressRepository';
+import { CONTENT_STATS } from '../data/contentStats.generated';
 import type { Level } from '../types';
 
 export default function SettingsPage() {
@@ -45,7 +47,7 @@ export default function SettingsPage() {
   };
 
   const runReset = async () => {
-    await Promise.all([deleteAllSessions(), deleteAllReviewItems(), resetProgress()]);
+    await Promise.all([deleteAllSessions(), deleteAllReviewItems(), deleteAllToeicResults(), resetProgress()]);
     setConfirmReset(false);
     setMessage('学習データを初期化しました。');
   };
@@ -111,6 +113,22 @@ export default function SettingsPage() {
           ))}
         </div>
 
+        <div className="mb-4 mt-4 flex items-center justify-between">
+          <div>
+            <span>自由学習モード</span>
+            <p className="text-xs text-slate-400">OFFの場合はおすすめ学習ルートに沿った順番を案内します（レベルは常に自由に選べます）</p>
+          </div>
+          <button
+            onClick={() => update({ freeStudyMode: !settings.freeStudyMode })}
+            className={`tap-target h-8 w-14 shrink-0 rounded-full p-1 transition-colors ${settings.freeStudyMode ? 'bg-blue-600' : 'bg-slate-300'}`}
+            aria-label="自由学習モード切り替え"
+            role="switch"
+            aria-checked={!!settings.freeStudyMode}
+          >
+            <span className={`block h-6 w-6 rounded-full bg-white transition-transform ${settings.freeStudyMode ? 'translate-x-6' : ''}`} />
+          </button>
+        </div>
+
         <p className="mb-2 mt-4 text-sm">1日の学習目標時間（分）</p>
         <input
           type="number"
@@ -120,6 +138,34 @@ export default function SettingsPage() {
           onChange={(e) => update({ dailyGoalMinutes: Number(e.target.value) || 30 })}
           className="w-full rounded-xl border border-slate-300 p-3 dark:border-slate-600 dark:bg-slate-900"
         />
+      </Card>
+
+      <Card>
+        <h2 className="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400">コンテンツ数</h2>
+        <ul className="grid grid-cols-2 gap-2 text-sm">
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Grammar</span><span className="font-bold">{CONTENT_STATS.grammar.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Vocabulary</span><span className="font-bold">{CONTENT_STATS.vocabulary.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Reading（教材）</span><span className="font-bold">{CONTENT_STATS.readingMaterials.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Reading（設問）</span><span className="font-bold">{CONTENT_STATS.readingQuestions.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Writing</span><span className="font-bold">{CONTENT_STATS.writing.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>TOEIC</span><span className="font-bold">{CONTENT_STATS.toeic.total}</span>
+          </li>
+        </ul>
+        <p className="mt-2 text-xs text-slate-400">
+          合計 {CONTENT_STATS.grammar.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件
+          （{new Date(CONTENT_STATS.generatedAt).toLocaleDateString('ja-JP')} 時点）
+        </p>
       </Card>
 
       <Card>

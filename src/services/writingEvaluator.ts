@@ -1,4 +1,4 @@
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/[.,!?;:'"()]/g, ' ')
@@ -30,6 +30,37 @@ export function evaluateAgainstKeywords(userAnswer: string, keywords: string[]):
 
   const score = keywords.length === 0 ? 100 : Math.round((matched.length / keywords.length) * 100);
   return { matchedKeywords: matched, missedKeywords: missed, score };
+}
+
+export type FreeWritingTier = 'exact' | 'close' | 'needs-review';
+
+export const FREE_WRITING_TIER_LABELS: Record<FreeWritingTier, string> = {
+  exact: '完全一致',
+  close: 'ほぼ正解',
+  'needs-review': '要復習',
+};
+
+export interface GradedEvaluation extends EvaluationResult {
+  tier: FreeWritingTier;
+}
+
+/** Grades free-form English writing offline: exact-match against any accepted answer first,
+ * then falls back to key-phrase coverage so partial, differently-worded answers still get
+ * useful feedback instead of a flat "wrong". */
+export function gradeWriting(
+  userAnswer: string,
+  options: { acceptableAnswers?: string[]; keyPhrases?: string[] }
+): GradedEvaluation {
+  const normalizedUser = normalize(userAnswer);
+  const exactMatch = (options.acceptableAnswers ?? []).some((a) => normalize(a) === normalizedUser);
+  const keyPhrases = options.keyPhrases ?? [];
+  const { matchedKeywords, missedKeywords, score } = evaluateAgainstKeywords(userAnswer, keyPhrases);
+
+  if (exactMatch) {
+    return { matchedKeywords: keyPhrases, missedKeywords: [], score: 100, tier: 'exact' };
+  }
+  const tier: FreeWritingTier = score >= 80 ? 'close' : 'needs-review';
+  return { matchedKeywords, missedKeywords, score, tier };
 }
 
 export function isReorderCorrect(userOrder: string[], correctOrder: string[]): boolean {

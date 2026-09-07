@@ -32,6 +32,19 @@ export const level4Materials: ReadingMaterial[] = [
         notes: ['because 節が理由を表す', '比較級 thicker ... than ~ の構文'],
       },
     ],
+    structureBreakdowns: [
+      {
+        sentence: 'The patient who underwent PCI showed an improvement in coronary blood flow.',
+        translationJa: 'PCI（経皮的冠動脈インターベンション）を受けた患者は、冠動脈血流の改善を示した。',
+        segments: [
+          { text: 'The patient', role: 'S（主語）' },
+          { text: 'who underwent PCI', role: '関係詞節（Sを修飾）' },
+          { text: 'showed', role: 'V（動詞）' },
+          { text: 'an improvement', role: 'O（目的語）' },
+          { text: 'in coronary blood flow', role: '修飾（前置詞句）' },
+        ],
+      },
+    ],
   },
   {
     id: 'l4-002',

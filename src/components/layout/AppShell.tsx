@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import SideNav from './SideNav';
+import OnboardingModal from './OnboardingModal';
 import { useSettings } from '../../hooks/useSettings';
 
 export default function AppShell() {
@@ -25,6 +26,7 @@ export default function AppShell() {
         </main>
       </div>
       {!isTraining && <BottomNav />}
+      <OnboardingModal />
     </div>
   );
 }

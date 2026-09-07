@@ -2,7 +2,7 @@ import type { WritingExercise } from '../../types';
 import ReorderExerciseView from './ReorderExerciseView';
 import FillBlankExerciseView from './FillBlankExerciseView';
 import OpenEndedExerciseView from './OpenEndedExerciseView';
-import { recordIncompleteWriting } from '../../services/reviewService';
+import { recordWritingAnswer } from '../../services/reviewService';
 
 const TYPE_LABELS: Record<WritingExercise['type'], string> = {
   reorder: '並び替え',
@@ -18,9 +18,7 @@ interface WritingExerciseViewProps {
 
 export default function WritingExerciseView({ exercise, onDone }: WritingExerciseViewProps) {
   const handleResult = async (wasCorrect: boolean, userAnswerText: string) => {
-    if (!wasCorrect) {
-      await recordIncompleteWriting(exercise, userAnswerText);
-    }
+    await recordWritingAnswer(exercise, wasCorrect, userAnswerText);
     onDone(wasCorrect);
   };
 

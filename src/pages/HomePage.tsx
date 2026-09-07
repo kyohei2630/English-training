@@ -4,7 +4,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import ProgressBar from '../components/common/ProgressBar';
 import { useProgress } from '../hooks/useProgress';
-import { getDailyPlan, TOTAL_CURRICULUM_DAYS } from '../services/curriculum';
+import { getDailyPlan, TOTAL_CURRICULUM_DAYS, type DailyPlan } from '../services/curriculum';
 import { getLevelInfo } from '../data/levels';
 import { getOrCreateTodaySession, TARGET_MINUTES, isSessionComplete } from '../services/sessionService';
 import { getAllSessions } from '../db/repositories/sessionRepository';
@@ -15,6 +15,7 @@ import type { LearningSession } from '../types';
 export default function HomePage() {
   const { progress, loading } = useProgress();
   const [session, setSession] = useState<LearningSession | null>(null);
+  const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [weeklyMinutes, setWeeklyMinutes] = useState(0);
   const navigate = useNavigate();
 
@@ -22,23 +23,25 @@ export default function HomePage() {
     (async () => {
       const s = await getOrCreateTodaySession();
       setSession(s);
+      const day = Math.min(s.day, TOTAL_CURRICULUM_DAYS + 1000);
+      setPlan(await getDailyPlan(day));
       const sessions = await getAllSessions();
       setWeeklyMinutes(computeWeeklyMinutes(sessions));
     })();
   }, [progress.currentDay]);
 
-  if (loading || !session) {
+  if (loading || !session || !plan) {
     return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
   }
 
-  const day = Math.min(session.day, TOTAL_CURRICULUM_DAYS + 1000);
-  const plan = getDailyPlan(day);
   const levelInfo = getLevelInfo(progress.currentLevel);
   const complete = isSessionComplete(session);
+  const todayMinutes =
+    session.minutesSpent.reading + session.minutesSpent.grammar + session.minutesSpent.writing + session.minutesSpent.review;
 
   const sectionRows = [
     { key: 'reading', label: 'Reading', minutes: TARGET_MINUTES.reading, done: session.sectionsDone.reading },
-    { key: 'understanding', label: 'Understanding', minutes: TARGET_MINUTES.understanding, done: session.sectionsDone.understanding },
+    { key: 'grammar', label: 'Grammar', minutes: TARGET_MINUTES.grammar, done: session.sectionsDone.grammar },
     { key: 'writing', label: 'Writing', minutes: TARGET_MINUTES.writing, done: session.sectionsDone.writing },
     { key: 'review', label: 'Review', minutes: TARGET_MINUTES.review, done: session.sectionsDone.review },
   ] as const;
@@ -93,20 +96,37 @@ export default function HomePage() {
       </div>
 
       <Card>
+        <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">今日の進捗</p>
+        <ProgressBar value={(todayMinutes / 30) * 100} label={`${todayMinutes} / 30 分`} />
+      </Card>
+
+      <Card>
         <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">今週の学習時間</p>
         <ProgressBar value={(weeklyMinutes / (30 * 7)) * 100} label={`${weeklyMinutes} 分 / 週目標 ${30 * 7} 分`} />
       </Card>
 
-      <div className="grid grid-cols-3 gap-2 text-center text-sm">
-        <Link to="/reading" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
-          📖 Reading
-        </Link>
-        <Link to="/writing" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
-          ✍️ Writing
-        </Link>
-        <Link to="/review" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
-          🔄 Review
-        </Link>
+      <div>
+        <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">追加トレーニング（時間制限なし）</p>
+        <div className="grid grid-cols-3 gap-2 text-center text-sm">
+          <Link to="/vocabulary" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            🧠 Vocabulary
+          </Link>
+          <Link to="/reading" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            📖 Reading
+          </Link>
+          <Link to="/writing" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            ✍️ Writing
+          </Link>
+          <Link to="/toeic" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            📝 TOEIC
+          </Link>
+          <Link to="/review" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            🔄 Review
+          </Link>
+          <Link to="/extra-training" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            ➕ すべて見る
+          </Link>
+        </div>
       </div>
     </div>
   );

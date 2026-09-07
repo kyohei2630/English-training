@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import WritingExerciseView from '../components/writing/WritingExerciseView';
-import { WRITING_BY_LEVEL } from '../data/writing';
+import { loadWritingLevel } from '../data/writing/loader';
 import { LEVELS } from '../data/levels';
 import { useProgress } from '../hooks/useProgress';
 import type { Level, WritingExercise } from '../types';
@@ -17,10 +17,24 @@ const TYPE_LABELS: Record<WritingExercise['type'], string> = {
 export default function WritingPage() {
   const { progress } = useProgress();
   const [level, setLevel] = useState<Level>(progress.currentLevel);
+  const [exercises, setExercises] = useState<WritingExercise[]>([]);
+  const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<WritingExercise | null>(null);
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
 
-  const exercises = WRITING_BY_LEVEL[level];
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    loadWritingLevel(level).then((data) => {
+      if (!cancelled) {
+        setExercises(data);
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [level]);
 
   if (active) {
     return (
@@ -62,23 +76,27 @@ export default function WritingPage() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3">
-        {exercises.map((ex) => (
-          <Card
-            key={ex.id}
-            onClick={() => setActive(ex)}
-            className="cursor-pointer transition-colors hover:border-blue-300 dark:hover:border-blue-700"
-          >
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-                {TYPE_LABELS[ex.type]}
-              </span>
-              {doneIds.has(ex.id) && <span className="text-green-500">✓ 完了</span>}
-            </div>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{ex.instructionJa}</p>
-          </Card>
-        ))}
-      </div>
+      {loading ? (
+        <div className="py-10 text-center text-slate-400">読み込み中...</div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {exercises.map((ex) => (
+            <Card
+              key={ex.id}
+              onClick={() => setActive(ex)}
+              className="cursor-pointer transition-colors hover:border-blue-300 dark:hover:border-blue-700"
+            >
+              <div className="flex items-center justify-between">
+                <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                  {TYPE_LABELS[ex.type]}
+                </span>
+                {doneIds.has(ex.id) && <span className="text-green-500">✓ 完了</span>}
+              </div>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{ex.instructionJa}</p>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

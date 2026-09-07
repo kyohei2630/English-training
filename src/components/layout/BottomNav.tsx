@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { NAV_ITEMS } from './NavItems';
+import { MOBILE_NAV_ITEMS as NAV_ITEMS } from './NavItems';
 
 export default function BottomNav() {
   return (

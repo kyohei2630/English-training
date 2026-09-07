@@ -2,8 +2,11 @@ import type { LearningSession, SectionKey, UserProgress } from '../types';
 import { addDaysISO, diffInCalendarDays, todayLocalISODate } from '../utils/date';
 import { getSessionByDate, saveSession } from '../db/repositories/sessionRepository';
 import { getProgress, saveProgress } from '../db/repositories/progressRepository';
+import { getDueReviewItems } from '../db/repositories/reviewRepository';
 
-export const TARGET_MINUTES = { reading: 10, understanding: 5, writing: 10, review: 5 } as const;
+/** Base target minutes for a 30-minute day. Actual minutes shown to the user are
+ * rebalanced by dailyPlanner.ts when the review queue is unusually large. */
+export const TARGET_MINUTES = { reading: 8, grammar: 8, writing: 7, review: 7 } as const;
 
 function emptySession(date: string, day: number): LearningSession {
   return {
@@ -15,11 +18,13 @@ function emptySession(date: string, day: number): LearningSession {
     day,
     startedAt: new Date().toISOString(),
     completedAt: null,
-    sectionsDone: { reading: false, understanding: false, writing: false, review: false },
-    minutesSpent: { reading: 0, understanding: 0, writing: 0, review: 0 },
+    sectionsDone: { reading: false, grammar: false, writing: false, review: false },
+    minutesSpent: { reading: 0, grammar: 0, writing: 0, review: 0 },
     materialsCompleted: [],
     readingCorrect: 0,
     readingTotal: 0,
+    grammarCorrect: 0,
+    grammarTotal: 0,
     reviewCorrect: 0,
     reviewTotal: 0,
     writingCompleted: 0,
@@ -75,10 +80,17 @@ export async function addMinutes(section: SectionKey, minutes: number): Promise<
 export function isSessionComplete(session: LearningSession): boolean {
   return (
     session.sectionsDone.reading &&
-    session.sectionsDone.understanding &&
+    session.sectionsDone.grammar &&
     session.sectionsDone.writing &&
     session.sectionsDone.review
   );
+}
+
+/** How many of today's due review items are outstanding — used to decide whether Review
+ * should be given more of the 30-minute budget today (see dailyPlanner.ts). */
+export async function countDueReviewItems(): Promise<number> {
+  const items = await getDueReviewItems(todayLocalISODate());
+  return items.length;
 }
 
 /** Call once when all four sections are done for the day. Updates streak, totals, and advances the curriculum day. */
@@ -94,7 +106,7 @@ export async function completeTodaySession(): Promise<{ session: LearningSession
   const progress = await getProgress();
   const totalMinutesToday =
     session.minutesSpent.reading +
-    session.minutesSpent.understanding +
+    session.minutesSpent.grammar +
     session.minutesSpent.writing +
     session.minutesSpent.review;
 
@@ -114,6 +126,8 @@ export async function completeTodaySession(): Promise<{ session: LearningSession
       lastStudyDate: today,
       readingAttempted: progress.readingAttempted + session.readingTotal,
       readingCorrect: progress.readingCorrect + session.readingCorrect,
+      grammarAttempted: progress.grammarAttempted + session.grammarTotal,
+      grammarCorrect: progress.grammarCorrect + session.grammarCorrect,
       writingCompleted: progress.writingCompleted + session.writingCompleted,
       reviewAttempted: progress.reviewAttempted + session.reviewTotal,
       reviewCorrect: progress.reviewCorrect + session.reviewCorrect,

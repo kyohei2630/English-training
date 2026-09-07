@@ -1,19 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReadingView from '../components/reading/ReadingView';
 import UnderstandingQuiz from '../components/reading/UnderstandingQuiz';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
-import { getMaterialById } from '../data/materials';
-import { getQuestionsForMaterial } from '../data/questions';
+import { loadMaterialById, loadQuestionsForMaterial } from '../data/reading/loader';
+import type { ReadingMaterial, UnderstandingQuestion } from '../types';
 
 export default function ReadingDetailPage() {
   const { materialId } = useParams<{ materialId: string }>();
   const navigate = useNavigate();
+  const [material, setMaterial] = useState<ReadingMaterial | null | undefined>(undefined);
+  const [questions, setQuestions] = useState<UnderstandingQuestion[]>([]);
   const [showQuiz, setShowQuiz] = useState(false);
   const [result, setResult] = useState<{ correct: number; total: number } | null>(null);
 
-  const material = materialId ? getMaterialById(materialId) : undefined;
+  useEffect(() => {
+    if (!materialId) {
+      setMaterial(null);
+      return;
+    }
+    (async () => {
+      const [m, q] = await Promise.all([loadMaterialById(materialId), loadQuestionsForMaterial(materialId)]);
+      setMaterial(m ?? null);
+      setQuestions(q);
+    })();
+  }, [materialId]);
+
+  if (material === undefined) {
+    return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
+  }
 
   if (!material) {
     return (
@@ -25,8 +41,6 @@ export default function ReadingDetailPage() {
       </div>
     );
   }
-
-  const questions = getQuestionsForMaterial(material.id);
 
   if (result) {
     return (
@@ -45,6 +59,7 @@ export default function ReadingDetailPage() {
     return (
       <UnderstandingQuiz
         questions={questions}
+        level={material.level}
         onComplete={(correct, total) => setResult({ correct, total })}
       />
     );

@@ -44,6 +44,16 @@ export async function getReviewItemByRef(refId: string): Promise<ReviewItem | un
   }
 }
 
+export async function getReviewItemsByCategory(category: ReviewItem['category']): Promise<ReviewItem[]> {
+  try {
+    const db = await getDB();
+    return await db.getAllFromIndex('reviewItems', 'by-category', category);
+  } catch (err) {
+    console.error('Failed to read review items by category from IndexedDB', err);
+    return [];
+  }
+}
+
 export async function deleteAllReviewItems(): Promise<void> {
   try {
     const db = await getDB();

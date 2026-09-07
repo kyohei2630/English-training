@@ -12,6 +12,7 @@ const CATEGORY_LABELS: Record<ReviewItem['category'] | 'all', string> = {
   grammar: '文法',
   reading: '読解',
   writing: '英作文',
+  toeic: 'TOEIC',
 };
 
 export default function ReviewPage() {
@@ -52,6 +53,7 @@ export default function ReviewPage() {
     grammar: items.filter((i) => i.category === 'grammar').length,
     reading: items.filter((i) => i.category === 'reading').length,
     writing: items.filter((i) => i.category === 'writing').length,
+    toeic: items.filter((i) => i.category === 'toeic').length,
   };
 
   return (

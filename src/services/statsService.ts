@@ -2,7 +2,7 @@ import type { LearningSession } from '../types';
 import { todayLocalISODate, diffInCalendarDays } from '../utils/date';
 
 function sessionTotalMinutes(s: LearningSession): number {
-  return s.minutesSpent.reading + s.minutesSpent.understanding + s.minutesSpent.writing + s.minutesSpent.review;
+  return s.minutesSpent.reading + s.minutesSpent.grammar + s.minutesSpent.writing + s.minutesSpent.review;
 }
 
 export function computeWeeklyMinutes(sessions: LearningSession[]): number {

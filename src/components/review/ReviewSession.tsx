@@ -10,6 +10,7 @@ const CATEGORY_LABELS: Record<ReviewItem['category'], string> = {
   grammar: '文法',
   reading: '読解',
   writing: '英作文',
+  toeic: 'TOEIC',
 };
 
 interface ReviewSessionProps {

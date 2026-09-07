@@ -1,23 +1,60 @@
-import type { GrammarPoint, UnderstandingQuestion, VocabularyItem, WritingExercise } from '../types';
-import { createReviewItem } from './reviewScheduler';
+import type { GrammarPoint, Level, ReviewCategory, UnderstandingQuestion, VocabularyItem, WritingExercise } from '../types';
+import { applyReviewAnswer, createReviewItem } from './reviewScheduler';
 import { getReviewItemByRef, upsertReviewItem } from '../db/repositories/reviewRepository';
 import { getProgress, saveProgress } from '../db/repositories/progressRepository';
+import type { ReviewItem } from '../types';
 
-export async function recordWrongQuestion(question: UnderstandingQuestion): Promise<void> {
-  const existing = await getReviewItemByRef(question.id);
-  const item = existing
-    ? { ...existing }
-    : createReviewItem({
-        category: 'reading',
-        refId: question.id,
-        promptText: question.question,
-        answerText: question.choices[question.correctIndex],
-        explanation: question.explanation,
-      });
-  await upsertReviewItem(item);
+/**
+ * Records one answer to any question in the app (correct or incorrect) as a review-deck
+ * entry, creating it on first answer and re-scheduling it every time after via the
+ * spaced-repetition ladder. This is the single source of truth behind SRS scheduling,
+ * mastery tiers, and weakness-by-tag analysis (see masteryService / weaknessAnalysis).
+ */
+export async function recordAnswer(params: {
+  category: ReviewCategory;
+  refId: string;
+  promptText: string;
+  answerText: string;
+  explanation?: string;
+  tag?: string;
+  level?: Level;
+  wasCorrect: boolean;
+}): Promise<ReviewItem> {
+  const existing = await getReviewItemByRef(params.refId);
+  const base: ReviewItem =
+    existing ??
+    createReviewItem({
+      category: params.category,
+      refId: params.refId,
+      promptText: params.promptText,
+      answerText: params.answerText,
+      explanation: params.explanation,
+      tag: params.tag,
+      level: params.level,
+    });
+  const updated = applyReviewAnswer({ ...base, tag: base.tag ?? params.tag, level: base.level ?? params.level }, params.wasCorrect);
+  await upsertReviewItem(updated);
+  return updated;
 }
 
-export async function recordIncompleteWriting(exercise: WritingExercise, userAnswer: string): Promise<void> {
+export async function recordUnderstandingAnswer(
+  question: UnderstandingQuestion,
+  wasCorrect: boolean,
+  level?: Level
+): Promise<void> {
+  await recordAnswer({
+    category: 'reading',
+    refId: question.id,
+    promptText: question.question,
+    answerText: question.choices[question.correctIndex],
+    explanation: question.explanation,
+    tag: question.skillTag,
+    level,
+    wasCorrect,
+  });
+}
+
+export async function recordWritingAnswer(exercise: WritingExercise, wasCorrect: boolean, userAnswer?: string): Promise<void> {
   const answerText =
     exercise.type === 'reorder'
       ? exercise.correctOrder.join(' ')
@@ -25,17 +62,16 @@ export async function recordIncompleteWriting(exercise: WritingExercise, userAns
         ? exercise.answers[0]
         : exercise.sampleAnswers[0];
 
-  const existing = await getReviewItemByRef(exercise.id);
-  const item = existing
-    ? { ...existing }
-    : createReviewItem({
-        category: 'writing',
-        refId: exercise.id,
-        promptText: exercise.instructionJa,
-        answerText,
-        explanation: userAnswer ? `あなたの回答: ${userAnswer}` : undefined,
-      });
-  await upsertReviewItem(item);
+  await recordAnswer({
+    category: 'writing',
+    refId: exercise.id,
+    promptText: exercise.instructionJa,
+    answerText,
+    explanation: userAnswer ? `あなたの回答: ${userAnswer}` : undefined,
+    tag: exercise.tag,
+    level: exercise.level,
+    wasCorrect,
+  });
 }
 
 export async function addWordToReview(word: VocabularyItem, materialId: string): Promise<void> {

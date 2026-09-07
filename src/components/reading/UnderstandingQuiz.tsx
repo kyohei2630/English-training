@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import type { UnderstandingQuestion } from '../../types';
+import type { Level, UnderstandingQuestion } from '../../types';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { recordWrongQuestion } from '../../services/reviewService';
+import { recordUnderstandingAnswer } from '../../services/reviewService';
 
 interface UnderstandingQuizProps {
   questions: UnderstandingQuestion[];
+  level?: Level;
   onComplete: (correctCount: number, totalCount: number) => void;
 }
 
-export default function UnderstandingQuiz({ questions, onComplete }: UnderstandingQuizProps) {
+export default function UnderstandingQuiz({ questions, level, onComplete }: UnderstandingQuizProps) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -34,9 +35,8 @@ export default function UnderstandingQuiz({ questions, onComplete }: Understandi
     const isCorrect = choiceIndex === question.correctIndex;
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
-    } else {
-      await recordWrongQuestion(question);
     }
+    await recordUnderstandingAnswer(question, isCorrect, level);
   };
 
   const handleNext = () => {

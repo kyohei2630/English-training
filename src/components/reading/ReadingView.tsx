@@ -4,6 +4,7 @@ import Card from '../common/Card';
 import HighlightedParagraph from './HighlightedParagraph';
 import VocabPopup from './VocabPopup';
 import GrammarPanel from './GrammarPanel';
+import SentenceStructureView from './SentenceStructureView';
 
 interface ReadingViewProps {
   material: ReadingMaterial;
@@ -15,7 +16,7 @@ const LEVEL_LABELS: Record<number, string> = {
   3: '一般英文',
   4: 'Medical/Science',
   5: 'Research',
-  6: 'Academic',
+  6: 'TOEIC',
 };
 
 export default function ReadingView({ material }: ReadingViewProps) {
@@ -61,6 +62,17 @@ export default function ReadingView({ material }: ReadingViewProps) {
               >
                 {point.sentence}
               </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {material.structureBreakdowns && material.structureBreakdowns.length > 0 && (
+        <Card>
+          <h2 className="mb-3 text-sm font-bold text-slate-500 dark:text-slate-400">英文構造の解析</h2>
+          <div className="flex flex-col gap-4">
+            {material.structureBreakdowns.map((s, i) => (
+              <SentenceStructureView key={i} structure={s} />
             ))}
           </div>
         </Card>
