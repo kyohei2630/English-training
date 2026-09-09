@@ -139,8 +139,8 @@ checkDuplicates(allIds, 'all content (global)');
 // ---------------------------------------------------------------------------
 const TARGETS: { label: string; actual: number; target: number }[] = [
   { label: 'Grammar', actual: ALL_GRAMMAR_QUESTIONS.length, target: 800 },
-  { label: 'Reading (understanding questions)', actual: ALL_QUESTIONS.length, target: 200 },
-  { label: 'Reading (passages)', actual: ALL_MATERIALS.length, target: 20 },
+  { label: 'Reading (understanding questions)', actual: ALL_QUESTIONS.length, target: 960 },
+  { label: 'Reading (passages)', actual: ALL_MATERIALS.length, target: 160 },
   { label: 'Writing', actual: ALL_WRITING.length, target: 200 },
   { label: 'Vocabulary', actual: ALL_VOCABULARY.length, target: 2500 },
   { label: 'TOEIC (all parts)', actual: ALL_TOEIC_QUESTIONS.length, target: 300 },
