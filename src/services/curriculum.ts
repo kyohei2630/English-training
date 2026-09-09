@@ -1,4 +1,4 @@
-import type { GrammarQuestion, Level, ReadingMaterial, UnderstandingQuestion, WritingExercise } from '../types';
+import type { GrammarLesson, GrammarQuestion, Level, ReadingMaterial, UnderstandingQuestion, WritingExercise } from '../types';
 import { LEVELS } from '../data/levels';
 import { loadReadingLevel } from '../data/reading/loader';
 import { loadWritingLevel } from '../data/writing/loader';
@@ -42,6 +42,9 @@ export interface DailyPlan {
   reading: ReadingMaterial;
   writing: WritingExercise[];
   grammarQuestions: GrammarQuestion[];
+  /** the distinct lessons behind today's grammarQuestions, in first-appearance order,
+   * shown before the quiz so the flow is Lesson -> explanation -> examples -> practice */
+  grammarLessons: GrammarLesson[];
 }
 
 const GRAMMAR_PER_DAY = 6;
@@ -53,7 +56,7 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
   const startDay = getLevelStartDay(level);
   const indexInLevel = Math.max(0, day - startDay);
 
-  const [{ materials }, writingPool, { questions: grammarPool }] = await Promise.all([
+  const [{ materials }, writingPool, { questions: grammarPool, lessons: grammarLessonPool }] = await Promise.all([
     loadReadingLevel(level),
     loadWritingLevel(level),
     loadGrammarLevel(level),
@@ -76,7 +79,17 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
     }
   }
 
-  return { day, level, reading, writing, grammarQuestions };
+  const lessonById = new Map(grammarLessonPool.map((l) => [l.id, l]));
+  const grammarLessons: GrammarLesson[] = [];
+  const seenLessonIds = new Set<string>();
+  for (const q of grammarQuestions) {
+    if (seenLessonIds.has(q.lessonId)) continue;
+    seenLessonIds.add(q.lessonId);
+    const lesson = lessonById.get(q.lessonId);
+    if (lesson) grammarLessons.push(lesson);
+  }
+
+  return { day, level, reading, writing, grammarQuestions, grammarLessons };
 }
 
 export async function getUnderstandingQuestionsForDay(day: number): Promise<UnderstandingQuestion[]> {

@@ -1,49 +1,228 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import GrammarSession from '../components/grammar/GrammarSession';
+import VocabularyQuizSession from '../components/vocabulary/VocabularyQuizSession';
+import UnderstandingQuiz from '../components/reading/UnderstandingQuiz';
+import WritingSession from '../components/writing/WritingSession';
+import ToeicQuestionRunner from '../components/toeic/ToeicQuestionRunner';
 import { loadGrammarLevel } from '../data/grammar/loader';
+import { loadVocabularyLevel } from '../data/vocabulary/loader';
+import { loadReadingLevel } from '../data/reading/loader';
+import { loadWritingLevel } from '../data/writing/loader';
+import { loadAllToeicParts } from '../data/toeic/loader';
+import { flattenToeicQuestions, type FlatToeicItem } from '../services/toeicService';
 import { CONTENT_STATS } from '../data/contentStats.generated';
 import { LEVELS } from '../data/levels';
-import type { GrammarQuestion, Level } from '../types';
+import type { GrammarLesson, GrammarQuestion, Level, ReviewCategory, UnderstandingQuestion, VocabularyEntry, WritingExercise } from '../types';
 
-type Mode = 'menu' | 'grammar-level' | 'grammar-quiz';
+type Mode = 'menu' | 'grammar-level' | 'grammar-quiz' | 'vocabulary-quiz' | 'reading-quiz' | 'writing-quiz' | 'toeic-quiz';
+
+interface WeaknessFilter {
+  category: ReviewCategory;
+  tag: string;
+  level: Level;
+}
+
+const CATEGORY_LABELS_JA: Record<ReviewCategory, string> = {
+  vocabulary: 'Vocabulary',
+  grammar: 'Grammar',
+  reading: 'Reading',
+  writing: 'Writing',
+  toeic: 'TOEIC',
+};
 
 export default function ExtraTrainingPage() {
+  const location = useLocation();
   const [mode, setMode] = useState<Mode>('menu');
   const [level, setLevel] = useState<Level>(1);
-  const [questions, setQuestions] = useState<GrammarQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [result, setResult] = useState<{ correct: number; total: number } | null>(null);
+  const [activeFilter, setActiveFilter] = useState<WeaknessFilter | null>(null);
 
-  useEffect(() => {
-    if (mode !== 'grammar-quiz') return;
-    let cancelled = false;
+  const [grammarLessons, setGrammarLessons] = useState<GrammarLesson[]>([]);
+  const [grammarQuestions, setGrammarQuestions] = useState<GrammarQuestion[]>([]);
+  const [vocabEntries, setVocabEntries] = useState<VocabularyEntry[]>([]);
+  const [vocabPool, setVocabPool] = useState<VocabularyEntry[]>([]);
+  const [readingQuestions, setReadingQuestions] = useState<UnderstandingQuestion[]>([]);
+  const [writingExercises, setWritingExercises] = useState<WritingExercise[]>([]);
+  const [toeicItems, setToeicItems] = useState<FlatToeicItem[]>([]);
+
+  const [result, setResult] = useState<{ label: string; correct: number; total: number } | null>(null);
+
+  const startGrammar = async (targetLevel: Level, tag?: string) => {
     setLoadingQuestions(true);
-    loadGrammarLevel(level).then(({ questions: q }) => {
-      if (!cancelled) {
-        setQuestions(q);
-        setLoadingQuestions(false);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [mode, level]);
+    const { questions, lessons } = await loadGrammarLevel(targetLevel);
+    const filteredQuestions = tag ? questions.filter((q) => q.tag === tag) : questions;
+    const usedLessonIds = new Set(filteredQuestions.map((q) => q.lessonId));
+    const filteredLessons = tag ? lessons.filter((l) => usedLessonIds.has(l.id)) : lessons;
+    setGrammarQuestions(filteredQuestions);
+    setGrammarLessons(filteredLessons);
+    setLevel(targetLevel);
+    setLoadingQuestions(false);
+    setMode('grammar-quiz');
+  };
+
+  const startVocabulary = async (targetLevel: Level, tag: string) => {
+    setLoadingQuestions(true);
+    const pool = await loadVocabularyLevel(targetLevel);
+    const filtered = pool.filter((v) => v.category === tag);
+    setVocabEntries(filtered);
+    setVocabPool(pool);
+    setLoadingQuestions(false);
+    setMode('vocabulary-quiz');
+  };
+
+  const startReading = async (targetLevel: Level, tag: string) => {
+    setLoadingQuestions(true);
+    const { questions } = await loadReadingLevel(targetLevel);
+    const filtered = questions.filter((q) => q.skillTag === tag);
+    setReadingQuestions(filtered);
+    setLevel(targetLevel);
+    setLoadingQuestions(false);
+    setMode('reading-quiz');
+  };
+
+  const startWriting = async (targetLevel: Level, tag: string) => {
+    setLoadingQuestions(true);
+    const pool = await loadWritingLevel(targetLevel);
+    const filtered = pool.filter((w) => w.tag === tag);
+    setWritingExercises(filtered);
+    setLoadingQuestions(false);
+    setMode('writing-quiz');
+  };
+
+  const startToeic = async (tag: string) => {
+    setLoadingQuestions(true);
+    const byPart = await loadAllToeicParts();
+    const allQuestions = Object.values(byPart).flat();
+    const filtered = flattenToeicQuestions(allQuestions).filter((item) => item.tag === tag);
+    setToeicItems(filtered);
+    setLoadingQuestions(false);
+    setMode('toeic-quiz');
+  };
+
+  // Coming from Progress's 弱点分析: jump straight into a level-scoped, tag-filtered
+  // session in the matching category instead of the generic menu.
+  useEffect(() => {
+    const state = location.state as Partial<WeaknessFilter> | null;
+    if (!state?.category || !state.tag || !state.level) return;
+    const filter: WeaknessFilter = { category: state.category, tag: state.tag, level: state.level };
+    setActiveFilter(filter);
+    setResult(null);
+    switch (filter.category) {
+      case 'grammar':
+        void startGrammar(filter.level, filter.tag);
+        break;
+      case 'vocabulary':
+        void startVocabulary(filter.level, filter.tag);
+        break;
+      case 'reading':
+        void startReading(filter.level, filter.tag);
+        break;
+      case 'writing':
+        void startWriting(filter.level, filter.tag);
+        break;
+      case 'toeic':
+        void startToeic(filter.tag);
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
+
+  const backToMenu = () => {
+    setActiveFilter(null);
+    setResult(null);
+    setMode('menu');
+  };
+
+  if (loadingQuestions) {
+    return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
+  }
+
+  const filterBanner = activeFilter && (
+    <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+      <p className="text-sm text-amber-800 dark:text-amber-300">
+        弱点克服: <span className="font-bold">{CATEGORY_LABELS_JA[activeFilter.category]}</span> ・ {activeFilter.tag} に絞り込み中
+      </p>
+    </Card>
+  );
 
   if (mode === 'grammar-quiz') {
-    if (loadingQuestions) {
-      return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
-    }
     return (
-      <GrammarSession
-        questions={questions}
-        onComplete={(correct, total) => {
-          setResult({ correct, total });
-          setMode('menu');
-        }}
-      />
+      <div className="flex flex-col gap-4">
+        {filterBanner}
+        <GrammarSession
+          lessons={grammarLessons}
+          questions={grammarQuestions}
+          onComplete={(correct, total) => {
+            setResult({ label: 'Grammar', correct, total });
+            backToMenu();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'vocabulary-quiz') {
+    return (
+      <div className="flex flex-col gap-4">
+        {filterBanner}
+        <VocabularyQuizSession
+          entries={vocabEntries}
+          pool={vocabPool}
+          onComplete={(correct, total) => {
+            setResult({ label: 'Vocabulary', correct, total });
+            backToMenu();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'reading-quiz') {
+    return (
+      <div className="flex flex-col gap-4">
+        {filterBanner}
+        <UnderstandingQuiz
+          questions={readingQuestions}
+          level={level}
+          onComplete={(correct, total) => {
+            setResult({ label: 'Reading', correct, total });
+            backToMenu();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'writing-quiz') {
+    return (
+      <div className="flex flex-col gap-4">
+        {filterBanner}
+        <WritingSession
+          exercises={writingExercises}
+          onComplete={(completed, total) => {
+            setResult({ label: 'Writing', correct: completed, total });
+            backToMenu();
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'toeic-quiz') {
+    return (
+      <div className="flex flex-col gap-4">
+        {filterBanner}
+        <ToeicQuestionRunner
+          items={toeicItems}
+          onComplete={(_answers, correct) => {
+            setResult({ label: 'TOEIC', correct, total: toeicItems.length });
+            backToMenu();
+          }}
+        />
+      </div>
     );
   }
 
@@ -55,10 +234,7 @@ export default function ExtraTrainingPage() {
           {LEVELS.map((l) => (
             <button
               key={l.level}
-              onClick={() => {
-                setLevel(l.level);
-                setMode('grammar-quiz');
-              }}
+              onClick={() => startGrammar(l.level)}
               className="tap-target rounded-xl border border-slate-200 py-4 text-center dark:border-slate-700"
             >
               <p className="font-bold">Level {l.level}</p>
@@ -83,7 +259,7 @@ export default function ExtraTrainingPage() {
       {result && (
         <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/40">
           <p className="text-sm text-green-800 dark:text-green-300">
-            直前のGrammar練習: {result.correct} / {result.total} 問正解
+            直前の{result.label}練習: {result.correct} / {result.total} 問正解
           </p>
         </Card>
       )}

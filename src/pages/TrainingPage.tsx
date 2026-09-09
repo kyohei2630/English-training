@@ -164,7 +164,9 @@ export default function TrainingPage() {
           <UnderstandingQuiz questions={questions} level={plan.level} onComplete={finishReading} />
         )}
 
-        {step === 'grammar' && <GrammarSession questions={plan.grammarQuestions} onComplete={finishGrammar} />}
+        {step === 'grammar' && (
+          <GrammarSession lessons={plan.grammarLessons} questions={plan.grammarQuestions} onComplete={finishGrammar} />
+        )}
 
         {step === 'writing' && <WritingSession exercises={plan.writing} onComplete={finishWriting} />}
 

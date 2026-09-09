@@ -134,7 +134,9 @@ export default function ProgressPage() {
             {weaknesses.map((w) => (
               <button
                 key={`${w.category}-${w.tag}`}
-                onClick={() => navigate('/extra-training')}
+                onClick={() =>
+                  navigate('/extra-training', { state: { category: w.category, tag: w.tag, level: w.level } })
+                }
                 className="tap-target flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-left text-sm dark:border-amber-900 dark:bg-amber-950/30"
               >
                 <span>
