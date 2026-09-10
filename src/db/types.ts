@@ -1,5 +1,5 @@
 import type { DBSchema } from 'idb';
-import type { LearningSession, ReviewItem, UserProgress, AppSettings, ToeicResult } from '../types';
+import type { LearningSession, ReviewItem, UserProgress, AppSettings, ToeicResult, TheoryProgress } from '../types';
 
 export const DB_NAME = 'english-training-db';
 /**
@@ -7,8 +7,10 @@ export const DB_NAME = 'english-training-db';
  * v2: adds `toeicResults` store and `by-tag` / `by-level` indexes on `reviewItems`.
  *     No existing stored values are rewritten — new ReviewItem fields (tag, level,
  *     consecutiveCorrect) are optional and default at read time.
+ * v3: adds `theoryProgress` store (Grammar Theory learning state: unlearned/learning/
+ *     mastered per theory id). Purely additive — no existing store or field changes.
  */
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 export interface AppDBSchema extends DBSchema {
   sessions: {
@@ -33,5 +35,9 @@ export interface AppDBSchema extends DBSchema {
     key: string;
     value: ToeicResult;
     indexes: { 'by-date': string };
+  };
+  theoryProgress: {
+    key: string;
+    value: TheoryProgress;
   };
 }

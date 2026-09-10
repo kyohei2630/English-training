@@ -6,6 +6,8 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Home', icon: '🏠' },
+  { to: '/grammar-theory', label: 'Grammar Theory', icon: '📐' },
+  { to: '/grammar-terms', label: '文法用語辞典', icon: '📗' },
   { to: '/vocabulary', label: 'Vocabulary', icon: '🧠' },
   { to: '/reading', label: 'Reading', icon: '📖' },
   { to: '/writing', label: 'Writing', icon: '✍️' },

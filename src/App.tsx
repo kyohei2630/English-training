@@ -12,6 +12,8 @@ import ExtraTrainingPage from './pages/ExtraTrainingPage';
 import ReviewPage from './pages/ReviewPage';
 import ProgressPage from './pages/ProgressPage';
 import SettingsPage from './pages/SettingsPage';
+import GrammarTheoryPage from './pages/GrammarTheoryPage';
+import GrammarTermsPage from './pages/GrammarTermsPage';
 
 export default function App() {
   return (
@@ -27,6 +29,8 @@ export default function App() {
           <Route path="/toeic" element={<ToeicPage />} />
           <Route path="/toeic/mock-test" element={<ToeicMockTestPage />} />
           <Route path="/extra-training" element={<ExtraTrainingPage />} />
+          <Route path="/grammar-theory" element={<GrammarTheoryPage />} />
+          <Route path="/grammar-terms" element={<GrammarTermsPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/settings" element={<SettingsPage />} />

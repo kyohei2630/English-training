@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import type { GrammarLesson, GrammarQuestion } from '../../types';
+import { useMemo, useState } from 'react';
+import type { GrammarLesson, GrammarQuestion, GrammarTheory } from '../../types';
 import GrammarQuestionView from './GrammarQuestionView';
+import TheoryCard from './TheoryCard';
+import MiniCheckView from './MiniCheckView';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import { markTheoryViewed, recordMiniCheckResult } from '../../services/theoryService';
 
 interface GrammarSessionProps {
-  /** lessons to explain before the quiz (Lesson -> explanation -> examples -> practice).
-   * Pass an empty array to skip straight to the quiz. */
+  /** rich Theory entries for today's tags (Theory -> Mini Check -> Practice). */
+  theory: GrammarTheory[];
+  /** lightweight fallback explanations for tags without a matching Theory entry yet.
+   * Pass an empty array to skip straight past this phase. */
   lessons: GrammarLesson[];
   questions: GrammarQuestion[];
   onComplete: (correctCount: number, totalCount: number) => void;
@@ -34,16 +39,63 @@ function LessonCard({ lesson }: { lesson: GrammarLesson }) {
   );
 }
 
-export default function GrammarSession({ lessons, questions, onComplete }: GrammarSessionProps) {
-  const [phase, setPhase] = useState<'lesson' | 'quiz'>(lessons.length > 0 ? 'lesson' : 'quiz');
+type Phase = 'theory' | 'minicheck' | 'lesson' | 'quiz';
+
+function firstPhase(theory: GrammarTheory[], lessons: GrammarLesson[]): Phase {
+  if (theory.length > 0) return 'theory';
+  if (lessons.length > 0) return 'lesson';
+  return 'quiz';
+}
+
+export default function GrammarSession({ theory, lessons, questions, onComplete }: GrammarSessionProps) {
+  const [phase, setPhase] = useState<Phase>(() => firstPhase(theory, lessons));
   const [index, setIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const allMiniCheckItems = useMemo(() => theory.flatMap((t) => t.miniCheck.map((item) => ({ item, theoryId: t.id }))), [theory]);
 
   if (questions.length === 0) {
     return (
       <Card>
         <p className="text-slate-500">このレベルにはまだGrammar問題がありません。</p>
+        <Button className="mt-4" onClick={() => onComplete(0, 0)}>
+          戻る
+        </Button>
       </Card>
+    );
+  }
+
+  if (phase === 'theory') {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-sm font-medium text-slate-500">今日のGrammar Theory</p>
+        {theory.map((t) => (
+          <TheoryCard key={t.id} theory={t} />
+        ))}
+        <Button
+          size="lg"
+          onClick={async () => {
+            await Promise.all(theory.map((t) => markTheoryViewed(t.id)));
+            setPhase(allMiniCheckItems.length > 0 ? 'minicheck' : lessons.length > 0 ? 'lesson' : 'quiz');
+          }}
+        >
+          {allMiniCheckItems.length > 0 ? '理解度チェック（Mini Check）へ' : lessons.length > 0 ? '続きの文法解説へ' : '練習問題へ進む'}
+        </Button>
+      </div>
+    );
+  }
+
+  if (phase === 'minicheck') {
+    return (
+      <MiniCheckView
+        items={allMiniCheckItems.map((m) => m.item)}
+        onComplete={async (correct, total) => {
+          // Attribute the combined mini-check result to each theory shown today —
+          // simple and good enough for a daily-training recap of "did today's
+          // theory sink in", vs. the per-theory precision of the dedicated page.
+          await Promise.all(theory.map((t) => recordMiniCheckResult(t.id, correct, total)));
+          setPhase(lessons.length > 0 ? 'lesson' : 'quiz');
+        }}
+      />
     );
   }
 

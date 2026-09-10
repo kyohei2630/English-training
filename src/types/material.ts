@@ -235,6 +235,80 @@ export interface GrammarQuestion {
 }
 
 // ---------------------------------------------------------------------------
+// Grammar Theory (independent from GrammarLesson — a much richer "learn the
+// concept before practicing" explanation, browsable on its own and shown in
+// Daily Training before the quiz. Linked to GrammarQuestion/GrammarLesson by
+// `tag`, the same tag taxonomy already used for weakness analysis, so no new
+// cross-reference id scheme is needed.)
+// ---------------------------------------------------------------------------
+
+export interface GrammarTheoryRule {
+  title: string;
+  explanation: string;
+  formula?: string;
+}
+
+export interface GrammarTheoryExample {
+  english: string;
+  japanese: string;
+  explanation?: string;
+  /** reuses the same structure-visualization the Reading feature uses, so a
+   * theory example can show "S / V / O" style role breakdowns when useful */
+  structureBreakdown?: SentenceStructure;
+}
+
+export interface GrammarTheoryMiniCheckItem {
+  question: string;
+  choices: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface GrammarTheory {
+  id: string;
+  level: Level;
+  /** links this theory to GrammarQuestion.tag / GrammarLesson.tag so Theory <-> Practice
+   * navigation works off the existing tag taxonomy instead of a new id scheme */
+  tag: string;
+  title: string;
+  shortDescription: string;
+  /** "この文法は何？" — what the grammar point is for, in plain Japanese */
+  concept: string;
+  /** "基本の形" — e.g. "主語 + be動詞 + 動詞ing" */
+  basicForm?: string;
+  rules: GrammarTheoryRule[];
+  examples: GrammarTheoryExample[];
+  keyPoints: string[];
+  commonMistakes?: string[];
+  relatedTermIds?: string[];
+  relatedTheoryIds?: string[];
+  miniCheck: GrammarTheoryMiniCheckItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Grammar term dictionary (用語 -> 一言でいうと -> 詳しい説明 -> 例文 -> 該当箇所 -> 関連用語)
+// ---------------------------------------------------------------------------
+
+export type GrammarTermCategory = 'basic' | 'sentence-structure' | 'grammar-point';
+
+export interface GrammarTermExample {
+  english: string;
+  japanese: string;
+  /** which words/phrases in the example the term applies to, e.g. "a book = 目的語" */
+  breakdown: string[];
+}
+
+export interface GrammarTerm {
+  id: string;
+  term: string;
+  category: GrammarTermCategory;
+  oneLiner: string;
+  explanation: string;
+  example: GrammarTermExample;
+  relatedTermIds?: string[];
+}
+
+// ---------------------------------------------------------------------------
 // TOEIC
 // ---------------------------------------------------------------------------
 

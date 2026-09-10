@@ -7,18 +7,20 @@ import {
   getAllToeicResults,
   replaceAllToeicResults,
 } from '../db/repositories/toeicResultRepository';
+import { getAllTheoryProgress, replaceAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
 import { DEFAULT_PROGRESS } from '../db/repositories/progressRepository';
 import { DEFAULT_SETTINGS } from '../db/repositories/settingsRepository';
 
-const EXPORT_VERSION = 2;
+const EXPORT_VERSION = 3;
 
 export async function buildExportBundle(): Promise<ExportBundle> {
-  const [sessions, reviewItems, progress, settings, toeicResults] = await Promise.all([
+  const [sessions, reviewItems, progress, settings, toeicResults, theoryProgress] = await Promise.all([
     getAllSessions(),
     getAllReviewItems(),
     getProgress(),
     getSettings(),
     getAllToeicResults(),
+    getAllTheoryProgress(),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -28,6 +30,7 @@ export async function buildExportBundle(): Promise<ExportBundle> {
     progress,
     settings,
     toeicResults,
+    theoryProgress,
   };
 }
 
@@ -67,11 +70,12 @@ export async function importExportBundle(raw: string): Promise<void> {
     throw new ImportValidationError('学習データのバックアップファイルではないようです。');
   }
 
-  // v1 backups predate `toeicResults` and some UserProgress/AppSettings fields —
-  // backfill defaults so old exports still import cleanly (no data loss on upgrade).
+  // v1 backups predate `toeicResults`/`theoryProgress` and some UserProgress/AppSettings
+  // fields — backfill defaults so old exports still import cleanly (no data loss on upgrade).
   const progress = { ...DEFAULT_PROGRESS, ...parsed.progress };
   const settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
   const toeicResults = Array.isArray(parsed.toeicResults) ? parsed.toeicResults : [];
+  const theoryProgress = Array.isArray(parsed.theoryProgress) ? parsed.theoryProgress : [];
 
   await Promise.all([
     replaceAllSessions(parsed.sessions),
@@ -79,5 +83,6 @@ export async function importExportBundle(raw: string): Promise<void> {
     saveProgress(progress),
     saveSettings(settings),
     replaceAllToeicResults(toeicResults),
+    replaceAllTheoryProgress(theoryProgress),
   ]);
 }

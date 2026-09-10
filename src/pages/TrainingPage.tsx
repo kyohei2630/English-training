@@ -165,7 +165,12 @@ export default function TrainingPage() {
         )}
 
         {step === 'grammar' && (
-          <GrammarSession lessons={plan.grammarLessons} questions={plan.grammarQuestions} onComplete={finishGrammar} />
+          <GrammarSession
+            theory={plan.grammarTheory}
+            lessons={plan.grammarLessons}
+            questions={plan.grammarQuestions}
+            onComplete={finishGrammar}
+          />
         )}
 
         {step === 'writing' && <WritingSession exercises={plan.writing} onComplete={finishWriting} />}

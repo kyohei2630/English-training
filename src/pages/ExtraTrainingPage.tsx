@@ -8,6 +8,7 @@ import UnderstandingQuiz from '../components/reading/UnderstandingQuiz';
 import WritingSession from '../components/writing/WritingSession';
 import ToeicQuestionRunner from '../components/toeic/ToeicQuestionRunner';
 import { loadGrammarLevel } from '../data/grammar/loader';
+import { loadGrammarTheoryLevel } from '../data/grammar/theory/loader';
 import { loadVocabularyLevel } from '../data/vocabulary/loader';
 import { loadReadingLevel } from '../data/reading/loader';
 import { loadWritingLevel } from '../data/writing/loader';
@@ -15,7 +16,7 @@ import { loadAllToeicParts } from '../data/toeic/loader';
 import { flattenToeicQuestions, type FlatToeicItem } from '../services/toeicService';
 import { CONTENT_STATS } from '../data/contentStats.generated';
 import { LEVELS } from '../data/levels';
-import type { GrammarLesson, GrammarQuestion, Level, ReviewCategory, UnderstandingQuestion, VocabularyEntry, WritingExercise } from '../types';
+import type { GrammarLesson, GrammarQuestion, GrammarTheory, Level, ReviewCategory, UnderstandingQuestion, VocabularyEntry, WritingExercise } from '../types';
 
 type Mode = 'menu' | 'grammar-level' | 'grammar-quiz' | 'vocabulary-quiz' | 'reading-quiz' | 'writing-quiz' | 'toeic-quiz';
 
@@ -40,6 +41,7 @@ export default function ExtraTrainingPage() {
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [activeFilter, setActiveFilter] = useState<WeaknessFilter | null>(null);
 
+  const [grammarTheory, setGrammarTheory] = useState<GrammarTheory[]>([]);
   const [grammarLessons, setGrammarLessons] = useState<GrammarLesson[]>([]);
   const [grammarQuestions, setGrammarQuestions] = useState<GrammarQuestion[]>([]);
   const [vocabEntries, setVocabEntries] = useState<VocabularyEntry[]>([]);
@@ -52,11 +54,19 @@ export default function ExtraTrainingPage() {
 
   const startGrammar = async (targetLevel: Level, tag?: string) => {
     setLoadingQuestions(true);
-    const { questions, lessons } = await loadGrammarLevel(targetLevel);
+    const [{ questions, lessons }, theoryPool] = await Promise.all([
+      loadGrammarLevel(targetLevel),
+      loadGrammarTheoryLevel(targetLevel),
+    ]);
     const filteredQuestions = tag ? questions.filter((q) => q.tag === tag) : questions;
-    const usedLessonIds = new Set(filteredQuestions.map((q) => q.lessonId));
-    const filteredLessons = tag ? lessons.filter((l) => usedLessonIds.has(l.id)) : lessons;
+    const filteredTheory = tag ? theoryPool.filter((t) => t.tag === tag) : theoryPool;
+    const tagsCoveredByTheory = new Set(filteredTheory.map((t) => t.tag));
+    const usedLessonIds = new Set(
+      filteredQuestions.filter((q) => !tagsCoveredByTheory.has(q.tag)).map((q) => q.lessonId)
+    );
+    const filteredLessons = lessons.filter((l) => usedLessonIds.has(l.id));
     setGrammarQuestions(filteredQuestions);
+    setGrammarTheory(filteredTheory);
     setGrammarLessons(filteredLessons);
     setLevel(targetLevel);
     setLoadingQuestions(false);
@@ -153,6 +163,7 @@ export default function ExtraTrainingPage() {
       <div className="flex flex-col gap-4">
         {filterBanner}
         <GrammarSession
+          theory={grammarTheory}
           lessons={grammarLessons}
           questions={grammarQuestions}
           onComplete={(correct, total) => {
@@ -265,14 +276,30 @@ export default function ExtraTrainingPage() {
       )}
 
       <div className="grid grid-cols-2 gap-3">
+        <Link
+          to="/grammar-theory"
+          className="tap-target rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900"
+        >
+          <p className="text-2xl">📐</p>
+          <p className="mt-2 font-bold">Grammar Theory</p>
+          <p className="text-xs text-slate-400">先に文法の仕組みを理解する</p>
+        </Link>
         <button
           onClick={() => setMode('grammar-level')}
           className="tap-target rounded-2xl border border-slate-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900"
         >
           <p className="text-2xl">📚</p>
-          <p className="mt-2 font-bold">Grammar</p>
+          <p className="mt-2 font-bold">Grammar Practice</p>
           <p className="text-xs text-slate-400">レベル別に自由演習（全{CONTENT_STATS.grammar.total}問）</p>
         </button>
+        <Link
+          to="/grammar-terms"
+          className="tap-target rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900"
+        >
+          <p className="text-2xl">📗</p>
+          <p className="mt-2 font-bold">文法用語辞典</p>
+          <p className="text-xs text-slate-400">主語・SVOなど用語を調べる</p>
+        </Link>
         <Link to="/vocabulary" className="tap-target rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
           <p className="text-2xl">🧠</p>
           <p className="mt-2 font-bold">Vocabulary</p>

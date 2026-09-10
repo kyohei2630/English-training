@@ -42,6 +42,14 @@ export function getDB(): Promise<IDBPDatabase<AppDBSchema>> {
             reviewStore.createIndex('by-level', 'level');
           }
         }
+
+        // --- v3: theoryProgress store (Grammar Theory learning state) ---
+        // New store only; nothing else changes, so upgrading loses no existing data.
+        if (oldVersion < 3) {
+          if (!db.objectStoreNames.contains('theoryProgress')) {
+            db.createObjectStore('theoryProgress', { keyPath: 'id' });
+          }
+        }
       },
     });
   }

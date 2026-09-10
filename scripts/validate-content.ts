@@ -17,6 +17,8 @@ import { ALL_MATERIALS } from '../src/data/materials';
 import { ALL_QUESTIONS } from '../src/data/questions';
 import { ALL_WRITING } from '../src/data/writing';
 import { ALL_GRAMMAR_LESSONS, ALL_GRAMMAR_QUESTIONS } from '../src/data/grammar';
+import { ALL_GRAMMAR_THEORY } from '../src/data/grammar/theory';
+import { ALL_GRAMMAR_TERMS } from '../src/data/grammar/terms';
 import { ALL_VOCABULARY } from '../src/data/vocabulary';
 import { ALL_TOEIC_QUESTIONS, TOEIC_BY_PART } from '../src/data/toeic';
 import { LEVELS } from '../src/data/levels';
@@ -100,6 +102,54 @@ for (const q of ALL_GRAMMAR_QUESTIONS) {
 }
 
 // ---------------------------------------------------------------------------
+// Grammar Theory
+// ---------------------------------------------------------------------------
+checkDuplicates(ALL_GRAMMAR_THEORY.map((t) => t.id), 'grammar theory');
+const theoryIds = new Set(ALL_GRAMMAR_THEORY.map((t) => t.id));
+for (const t of ALL_GRAMMAR_THEORY) {
+  if (!VALID_LEVELS.has(t.level)) errors.push(`[不正なlevel] grammar theory ${t.id}: level=${t.level}`);
+  if (!t.title) errors.push(`[Theory欠落] ${t.id}: title が不足しています`);
+  if (!t.concept) errors.push(`[Theory欠落] ${t.id}: concept が不足しています`);
+  if (t.examples.length === 0) errors.push(`[Theory欠落] ${t.id}: examples が不足しています`);
+  if (!t.tag) errors.push(`[Theory欠落] ${t.id}: tag が不足しています`);
+  for (const relId of t.relatedTheoryIds ?? []) {
+    if (!theoryIds.has(relId)) errors.push(`[参照エラー] grammar theory ${t.id}: relatedTheoryIds "${relId}" が存在しません`);
+  }
+  for (const mc of t.miniCheck) {
+    if (!mc.question || !mc.choices || mc.choices.length < 2 || !mc.explanation) {
+      errors.push(`[Theory MiniCheck欠落] ${t.id}: question/choices(2+)/explanation が不足しています`);
+    }
+    if (mc.correctIndex < 0 || mc.correctIndex >= mc.choices.length) {
+      errors.push(`[Theory MiniCheck矛盾] ${t.id}: correctIndex が choices の範囲外です`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Grammar Terms (dictionary)
+// ---------------------------------------------------------------------------
+checkDuplicates(ALL_GRAMMAR_TERMS.map((t) => t.id), 'grammar terms');
+const termIds = new Set(ALL_GRAMMAR_TERMS.map((t) => t.id));
+for (const t of ALL_GRAMMAR_TERMS) {
+  if (!t.term) errors.push(`[Term欠落] ${t.id}: term が不足しています`);
+  if (!t.oneLiner) errors.push(`[Term欠落] ${t.id}: oneLiner が不足しています`);
+  if (!t.explanation) errors.push(`[Term欠落] ${t.id}: explanation が不足しています`);
+  if (!t.example || !t.example.english || !t.example.japanese || !t.example.breakdown?.length) {
+    errors.push(`[Term欠落] ${t.id}: example (english/japanese/breakdown) が不足しています`);
+  }
+  for (const relId of t.relatedTermIds ?? []) {
+    if (!termIds.has(relId)) errors.push(`[参照エラー] grammar term ${t.id}: relatedTermIds "${relId}" が存在しません`);
+  }
+}
+
+// Cross-link: Theory -> Terms
+for (const t of ALL_GRAMMAR_THEORY) {
+  for (const relId of t.relatedTermIds ?? []) {
+    if (!termIds.has(relId)) errors.push(`[参照エラー] grammar theory ${t.id}: relatedTermIds "${relId}" (term) が存在しません`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Vocabulary
 // ---------------------------------------------------------------------------
 checkDuplicates(ALL_VOCABULARY.map((v) => v.id), 'vocabulary ids');
@@ -129,6 +179,8 @@ const allIds = [
   ...ALL_WRITING.map((w) => w.id),
   ...ALL_GRAMMAR_LESSONS.map((l) => l.id),
   ...ALL_GRAMMAR_QUESTIONS.map((q) => q.id),
+  ...ALL_GRAMMAR_THEORY.map((t) => t.id),
+  ...ALL_GRAMMAR_TERMS.map((t) => t.id),
   ...ALL_VOCABULARY.map((v) => v.id),
   ...ALL_TOEIC_QUESTIONS.map((q) => q.id),
 ];
@@ -139,6 +191,8 @@ checkDuplicates(allIds, 'all content (global)');
 // ---------------------------------------------------------------------------
 const TARGETS: { label: string; actual: number; target: number }[] = [
   { label: 'Grammar', actual: ALL_GRAMMAR_QUESTIONS.length, target: 800 },
+  { label: 'Grammar Theory', actual: ALL_GRAMMAR_THEORY.length, target: 110 },
+  { label: 'Grammar Terms', actual: ALL_GRAMMAR_TERMS.length, target: 100 },
   { label: 'Reading (understanding questions)', actual: ALL_QUESTIONS.length, target: 960 },
   { label: 'Reading (passages)', actual: ALL_MATERIALS.length, target: 160 },
   { label: 'Writing', actual: ALL_WRITING.length, target: 200 },
@@ -160,6 +214,11 @@ for (const t of TARGETS) {
 console.log('--- TOEIC by part ---');
 for (const part of [1, 2, 3, 4, 5, 6, 7] as const) {
   console.log(`  Part ${part}: ${TOEIC_BY_PART[part].length}`);
+}
+console.log('--- Grammar Theory by level ---');
+const theoryByLevel = countByLevel(ALL_GRAMMAR_THEORY);
+for (const level of [1, 2, 3, 4, 5, 6] as const) {
+  console.log(`  L${level}: ${theoryByLevel[level]}`);
 }
 
 if (warnings.length > 0) {
@@ -184,6 +243,8 @@ const stats = {
     ),
   },
   writing: { total: ALL_WRITING.length, byLevel: countByLevel(ALL_WRITING) },
+  grammarTheory: { total: ALL_GRAMMAR_THEORY.length, byLevel: countByLevel(ALL_GRAMMAR_THEORY) },
+  grammarTerms: { total: ALL_GRAMMAR_TERMS.length },
   toeic: {
     total: ALL_TOEIC_QUESTIONS.length,
     byPart: {
@@ -210,6 +271,8 @@ export interface ContentStats {
   readingMaterials: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
   readingQuestions: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
   writing: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
+  grammarTheory: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
+  grammarTerms: { total: number };
   toeic: { total: number; byPart: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> };
 }
 

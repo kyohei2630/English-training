@@ -1,8 +1,9 @@
-import type { GrammarLesson, GrammarQuestion, Level, ReadingMaterial, UnderstandingQuestion, WritingExercise } from '../types';
+import type { GrammarLesson, GrammarQuestion, GrammarTheory, Level, ReadingMaterial, UnderstandingQuestion, WritingExercise } from '../types';
 import { LEVELS } from '../data/levels';
 import { loadReadingLevel } from '../data/reading/loader';
 import { loadWritingLevel } from '../data/writing/loader';
 import { loadGrammarLevel } from '../data/grammar/loader';
+import { loadGrammarTheoryLevel } from '../data/grammar/theory/loader';
 
 interface LevelRange {
   level: Level;
@@ -42,8 +43,13 @@ export interface DailyPlan {
   reading: ReadingMaterial;
   writing: WritingExercise[];
   grammarQuestions: GrammarQuestion[];
-  /** the distinct lessons behind today's grammarQuestions, in first-appearance order,
-   * shown before the quiz so the flow is Lesson -> explanation -> examples -> practice */
+  /** richer Theory entries covering today's grammarQuestions' tags, shown before the
+   * quiz as Theory -> Mini Check -> Practice. Takes priority over grammarLessons for
+   * any tag it covers. */
+  grammarTheory: GrammarTheory[];
+  /** fallback explanations (lighter than Theory) for any of today's tags that don't
+   * have a matching GrammarTheory entry yet, so every tag still gets *some* explanation
+   * before the quiz. In first-appearance order. */
   grammarLessons: GrammarLesson[];
 }
 
@@ -56,10 +62,11 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
   const startDay = getLevelStartDay(level);
   const indexInLevel = Math.max(0, day - startDay);
 
-  const [{ materials }, writingPool, { questions: grammarPool, lessons: grammarLessonPool }] = await Promise.all([
+  const [{ materials }, writingPool, { questions: grammarPool, lessons: grammarLessonPool }, grammarTheoryPool] = await Promise.all([
     loadReadingLevel(level),
     loadWritingLevel(level),
     loadGrammarLevel(level),
+    loadGrammarTheoryLevel(level),
   ]);
 
   const reading = materials[indexInLevel % materials.length];
@@ -79,17 +86,40 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
     }
   }
 
+  // Today's distinct tags, in first-appearance order across the day's questions.
+  const todaysTags: string[] = [];
+  const seenTags = new Set<string>();
+  for (const q of grammarQuestions) {
+    if (seenTags.has(q.tag)) continue;
+    seenTags.add(q.tag);
+    todaysTags.push(q.tag);
+  }
+
+  const theoryByTag = new Map(grammarTheoryPool.map((t) => [t.tag, t]));
+  const grammarTheory: GrammarTheory[] = [];
+  const tagsCoveredByTheory = new Set<string>();
+  for (const tag of todaysTags) {
+    const theory = theoryByTag.get(tag);
+    if (theory) {
+      grammarTheory.push(theory);
+      tagsCoveredByTheory.add(tag);
+    }
+  }
+
+  // Fallback Lesson explanations only for tags Theory doesn't cover yet, so the
+  // same grammar point is never explained twice in one day.
   const lessonById = new Map(grammarLessonPool.map((l) => [l.id, l]));
   const grammarLessons: GrammarLesson[] = [];
   const seenLessonIds = new Set<string>();
   for (const q of grammarQuestions) {
+    if (tagsCoveredByTheory.has(q.tag)) continue;
     if (seenLessonIds.has(q.lessonId)) continue;
     seenLessonIds.add(q.lessonId);
     const lesson = lessonById.get(q.lessonId);
     if (lesson) grammarLessons.push(lesson);
   }
 
-  return { day, level, reading, writing, grammarQuestions, grammarLessons };
+  return { day, level, reading, writing, grammarQuestions, grammarTheory, grammarLessons };
 }
 
 export async function getUnderstandingQuestionsForDay(day: number): Promise<UnderstandingQuestion[]> {

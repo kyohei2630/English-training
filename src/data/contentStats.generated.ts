@@ -10,11 +10,13 @@ export interface ContentStats {
   readingMaterials: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
   readingQuestions: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
   writing: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
+  grammarTheory: { total: number; byLevel: Record<1 | 2 | 3 | 4 | 5 | 6, number> };
+  grammarTerms: { total: number };
   toeic: { total: number; byPart: Record<1 | 2 | 3 | 4 | 5 | 6 | 7, number> };
 }
 
 export const CONTENT_STATS: ContentStats = {
-  "generatedAt": "2026-09-09T07:16:57.752Z",
+  "generatedAt": "2026-09-10T00:27:14.074Z",
   "grammar": {
     "total": 800,
     "byLevel": {
@@ -69,6 +71,20 @@ export const CONTENT_STATS: ContentStats = {
       "5": 29,
       "6": 31
     }
+  },
+  "grammarTheory": {
+    "total": 110,
+    "byLevel": {
+      "1": 28,
+      "2": 34,
+      "3": 22,
+      "4": 13,
+      "5": 13,
+      "6": 0
+    }
+  },
+  "grammarTerms": {
+    "total": 103
   },
   "toeic": {
     "total": 300,

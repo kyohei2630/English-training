@@ -8,13 +8,15 @@ import { useProgress } from '../hooks/useProgress';
 import { getAllSessions } from '../db/repositories/sessionRepository';
 import { getAllReviewItems } from '../db/repositories/reviewRepository';
 import { getAllToeicResults } from '../db/repositories/toeicResultRepository';
+import { getAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
 import { computeLast7Days } from '../services/statsService';
 import { isMastered } from '../services/masteryService';
 import { topWeaknesses } from '../services/weaknessAnalysis';
+import { statusOf } from '../services/theoryService';
 import { LEVELS, getLevelInfo } from '../data/levels';
 import { TOTAL_CURRICULUM_DAYS } from '../services/curriculum';
 import { CONTENT_STATS } from '../data/contentStats.generated';
-import type { LearningSession, ReviewItem, ToeicResult } from '../types';
+import type { LearningSession, ReviewItem, TheoryProgress, ToeicResult } from '../types';
 
 const CATEGORY_LABELS_JA: Record<ReviewItem['category'], string> = {
   vocabulary: 'Vocabulary',
@@ -29,6 +31,7 @@ export default function ProgressPage() {
   const [sessions, setSessions] = useState<LearningSession[]>([]);
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [toeicResults, setToeicResults] = useState<ToeicResult[]>([]);
+  const [theoryProgress, setTheoryProgress] = useState<TheoryProgress[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +39,7 @@ export default function ProgressPage() {
       setSessions(await getAllSessions());
       setReviewItems(await getAllReviewItems());
       setToeicResults(await getAllToeicResults());
+      setTheoryProgress(await getAllTheoryProgress());
     })();
   }, [progress.totalStudyDays]);
 
@@ -54,6 +58,13 @@ export default function ProgressPage() {
 
   const latestToeic = toeicResults[0];
   const weaknesses = topWeaknesses(reviewItems, 5, 3);
+
+  const theoryStatuses = theoryProgress.map((p) => statusOf(p));
+  const theoryMastered = theoryStatuses.filter((s) => s === 'mastered').length;
+  const theoryLearning = theoryStatuses.filter((s) => s === 'learning').length;
+  const theoryTotal = CONTENT_STATS.grammarTheory.total;
+  const theoryStarted = theoryMastered + theoryLearning;
+  const weakGrammarTags = weaknesses.filter((w) => w.category === 'grammar');
 
   return (
     <div className="flex flex-col gap-5">
@@ -95,7 +106,7 @@ export default function ProgressPage() {
         <StatCard label="TOEIC模擬テスト" value={`${progress.toeicMockTestsTaken} 回`} />
         <StatCard
           label="収録コンテンツ総数"
-          value={`${CONTENT_STATS.grammar.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件`}
+          value={`${CONTENT_STATS.grammar.total + CONTENT_STATS.grammarTheory.total + CONTENT_STATS.grammarTerms.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件`}
         />
       </div>
 
@@ -125,6 +136,43 @@ export default function ProgressPage() {
           </Card>
         )}
       </div>
+
+      <Card>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400">Grammar Theory</h2>
+          <Link to="/grammar-theory" className="text-xs text-blue-600 dark:text-blue-400">
+            開く →
+          </Link>
+        </div>
+        <ProgressBar value={theoryTotal > 0 ? (theoryStarted / theoryTotal) * 100 : 0} label={`${theoryStarted} / ${theoryTotal} lessons 着手済み`} colorClassName="bg-sky-500" />
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-lg bg-slate-100 py-2 dark:bg-slate-800">
+            <p className="font-bold">{theoryTotal - theoryStarted}</p>
+            <p className="text-slate-400">未学習</p>
+          </div>
+          <div className="rounded-lg bg-amber-100 py-2 dark:bg-amber-950">
+            <p className="font-bold text-amber-700 dark:text-amber-300">{theoryLearning}</p>
+            <p className="text-amber-600 dark:text-amber-400">学習中</p>
+          </div>
+          <div className="rounded-lg bg-green-100 py-2 dark:bg-green-950">
+            <p className="font-bold text-green-700 dark:text-green-300">{theoryMastered}</p>
+            <p className="text-green-600 dark:text-green-400">Mastered</p>
+          </div>
+        </div>
+        {weakGrammarTags.length > 0 && (
+          <div className="mt-3">
+            <p className="mb-1 text-xs text-slate-400">苦手な文法</p>
+            <div className="flex flex-wrap gap-1.5">
+              {weakGrammarTags.map((w) => (
+                <span key={w.tag} className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                  {w.tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-slate-400">文法用語辞典: {CONTENT_STATS.grammarTerms.total} 語収録</p>
+      </Card>
 
       {weaknesses.length > 0 && (
         <Card>

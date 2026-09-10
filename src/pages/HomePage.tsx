@@ -39,6 +39,8 @@ export default function HomePage() {
   const todayMinutes =
     session.minutesSpent.reading + session.minutesSpent.grammar + session.minutesSpent.writing + session.minutesSpent.review;
 
+  const grammarTopicTitle = plan.grammarTheory[0]?.title ?? plan.grammarLessons[0]?.title ?? null;
+
   const sectionRows = [
     { key: 'reading', label: 'Reading', minutes: TARGET_MINUTES.reading, done: session.sectionsDone.reading },
     { key: 'grammar', label: 'Grammar', minutes: TARGET_MINUTES.grammar, done: session.sectionsDone.grammar },
@@ -59,7 +61,13 @@ export default function HomePage() {
           <span className="rounded-full bg-blue-600 px-3 py-1 text-sm font-bold text-white">Day {session.day}</span>
         </div>
         <p className="mb-1 text-sm text-blue-800 dark:text-blue-300">{levelInfo.name}</p>
-        <p className="mb-4 text-sm text-blue-700 dark:text-blue-400">今日の教材: 「{plan.reading.title}」</p>
+        <p className="mb-1 text-sm text-blue-700 dark:text-blue-400">Reading: 「{plan.reading.title}」</p>
+        {grammarTopicTitle && (
+          <p className="mb-1 text-sm text-blue-700 dark:text-blue-400">
+            Grammar: 「{grammarTopicTitle}」を{plan.grammarTheory.length > 0 ? '理解してから練習' : '学ぶ'}
+          </p>
+        )}
+        <p className="mb-4 text-sm text-blue-700 dark:text-blue-400">Vocabulary: 今日の単語で復習</p>
 
         <ul className="mb-4 flex flex-col gap-2">
           {sectionRows.map((row) => (
@@ -108,6 +116,9 @@ export default function HomePage() {
       <div>
         <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">追加トレーニング（時間制限なし）</p>
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
+          <Link to="/grammar-theory" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            📐 Grammar Theory
+          </Link>
           <Link to="/vocabulary" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
             🧠 Vocabulary
           </Link>

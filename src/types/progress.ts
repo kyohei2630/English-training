@@ -100,6 +100,18 @@ export interface AppSettings {
   freeStudyMode?: boolean;
 }
 
+export type TheoryStatus = 'unlearned' | 'learning' | 'mastered';
+
+export interface TheoryProgress {
+  /** GrammarTheory.id */
+  id: string;
+  status: TheoryStatus;
+  viewedAt?: string; // ISO timestamp, set the first time the theory content is opened
+  miniCheckCorrect: number;
+  miniCheckTotal: number;
+  updatedAt: string; // ISO timestamp
+}
+
 export interface ExportBundle {
   exportedAt: string;
   version: number;
@@ -108,4 +120,5 @@ export interface ExportBundle {
   progress: UserProgress;
   settings: AppSettings;
   toeicResults?: ToeicResult[];
+  theoryProgress?: TheoryProgress[];
 }

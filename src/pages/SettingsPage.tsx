@@ -8,6 +8,7 @@ import { buildExportBundle, downloadExportBundle, importExportBundle, ImportVali
 import { deleteAllSessions } from '../db/repositories/sessionRepository';
 import { deleteAllReviewItems } from '../db/repositories/reviewRepository';
 import { deleteAllToeicResults } from '../db/repositories/toeicResultRepository';
+import { deleteAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
 import { resetProgress } from '../db/repositories/progressRepository';
 import { CONTENT_STATS } from '../data/contentStats.generated';
 import type { Level } from '../types';
@@ -47,7 +48,13 @@ export default function SettingsPage() {
   };
 
   const runReset = async () => {
-    await Promise.all([deleteAllSessions(), deleteAllReviewItems(), deleteAllToeicResults(), resetProgress()]);
+    await Promise.all([
+      deleteAllSessions(),
+      deleteAllReviewItems(),
+      deleteAllToeicResults(),
+      deleteAllTheoryProgress(),
+      resetProgress(),
+    ]);
     setConfirmReset(false);
     setMessage('学習データを初期化しました。');
   };
@@ -147,6 +154,12 @@ export default function SettingsPage() {
             <span>Grammar</span><span className="font-bold">{CONTENT_STATS.grammar.total}</span>
           </li>
           <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>Grammar Theory</span><span className="font-bold">{CONTENT_STATS.grammarTheory.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+            <span>文法用語</span><span className="font-bold">{CONTENT_STATS.grammarTerms.total}</span>
+          </li>
+          <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
             <span>Vocabulary</span><span className="font-bold">{CONTENT_STATS.vocabulary.total}</span>
           </li>
           <li className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
@@ -163,7 +176,7 @@ export default function SettingsPage() {
           </li>
         </ul>
         <p className="mt-2 text-xs text-slate-400">
-          合計 {CONTENT_STATS.grammar.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件
+          合計 {CONTENT_STATS.grammar.total + CONTENT_STATS.grammarTheory.total + CONTENT_STATS.grammarTerms.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件
           （{new Date(CONTENT_STATS.generatedAt).toLocaleDateString('ja-JP')} 時点）
         </p>
       </Card>
