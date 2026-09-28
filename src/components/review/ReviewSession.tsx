@@ -48,28 +48,29 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
     await recordReview(item, i === question.correctIndex);
   };
 
-  // Reading passages are long, so they start collapsed; TOEIC context is short enough to show.
-  const collapsible = item.category === 'reading';
-  const context = question.contextLines && (
-    <div className="whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800">
-      {question.contextLines.join('\n')}
-    </div>
-  );
-
   return (
     <>
+      {question.contextIsPassage && question.contextLines && (
+        // Reading review shows the whole passage above the question, like the Reading step.
+        <Card className="flex flex-col gap-4">
+          {question.contextTitle && <h2 className="text-xl font-bold">{question.contextTitle}</h2>}
+          {question.contextLines.map((paragraph, i) => (
+            <p key={i} className="text-base leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
+        </Card>
+      )}
       <Card>
         <CategoryBadge item={item} />
-        {question.contextTitle && <p className="mb-2 text-sm font-bold text-slate-500">{question.contextTitle}</p>}
-        {context &&
-          (collapsible ? (
-            <details className="mb-4">
-              <summary className="mb-2 cursor-pointer text-sm text-blue-600 dark:text-blue-400">本文を表示</summary>
-              {context}
-            </details>
-          ) : (
-            <div className="mb-4">{context}</div>
-          ))}
+        {!question.contextIsPassage && question.contextTitle && (
+          <p className="mb-2 text-sm font-bold text-slate-500">{question.contextTitle}</p>
+        )}
+        {!question.contextIsPassage && question.contextLines && (
+          <div className="mb-4 whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800">
+            {question.contextLines.join('\n')}
+          </div>
+        )}
         <p className="mb-4 text-lg font-medium leading-relaxed">{question.prompt}</p>
         <div className="flex flex-col gap-2">
           {question.choices.map((choice, i) => {
@@ -87,6 +88,7 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
                 disabled={selected !== null}
                 className={`tap-target rounded-xl border px-4 py-3 text-left text-base ${stateClasses} disabled:cursor-default`}
               >
+                <span className="mr-2 font-bold text-slate-400">{String.fromCharCode(65 + i)}.</span>
                 {choice}
               </button>
             );
