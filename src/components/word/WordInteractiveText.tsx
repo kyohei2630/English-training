@@ -1,6 +1,6 @@
 import { useMemo, useRef, type ElementType, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { useWordLookup } from './WordLookupContext';
-import { preloadWordBank, tokenizeText } from '../../services/wordLookup';
+import { extractSentence, preloadWordBank, tokenizeText } from '../../services/wordLookup';
 
 const LONG_PRESS_MS = 500;
 /** a finger that moves further than this is scrolling, not pressing */
@@ -35,7 +35,8 @@ export default function WordInteractiveText({ text, as: Tag = 'p', className = '
 
   if (!lookup || !segments) return <Tag className={className}>{text}</Tag>;
 
-  const open = (el: HTMLElement) => lookup.openWord(el.dataset.word!, el);
+  // The sentence the word sits in is passed along as its in-context example.
+  const open = (el: HTMLElement) => lookup.openWord(el.dataset.word!, el, extractSentence(text, Number(el.dataset.start)));
 
   const cancelPress = () => {
     if (press.current) window.clearTimeout(press.current.timer);
@@ -102,6 +103,7 @@ export default function WordInteractiveText({ text, as: Tag = 'p', className = '
           <span
             key={i}
             data-word={seg.text}
+            data-start={seg.start}
             role="button"
             // Only key vocabulary is in the tab order; tabbing through every word would be unusable.
             tabIndex={seg.isKey ? 0 : -1}

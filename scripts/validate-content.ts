@@ -22,6 +22,9 @@ import { ALL_GRAMMAR_TERMS } from '../src/data/grammar/terms';
 import { ALL_VOCABULARY } from '../src/data/vocabulary';
 import { ALL_TOEIC_QUESTIONS, TOEIC_BY_PART } from '../src/data/toeic';
 import { LEVELS } from '../src/data/levels';
+import { EN_JA_DICTIONARY } from '../src/data/dictionary/enJa';
+import { flattenToeicQuestions } from '../src/services/toeicService';
+import { lemmaCandidates, tokenizeText } from '../src/services/wordLookup';
 
 function countByLevel<T extends { level: number }>(items: T[]): Record<1 | 2 | 3 | 4 | 5 | 6, number> {
   const result = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
@@ -204,6 +207,34 @@ for (const t of TARGETS) {
   if (t.actual < t.target) {
     warnings.push(`[目標未達] ${t.label}: ${t.actual} / 目標 ${t.target}`);
   }
+}
+
+// Every word in a tappable passage (Reading + TOEIC) should get a meaning in the word popover:
+// from the material's vocabulary, the vocabulary bank, or the built-in dictionary. Mirrors
+// lookupWord in services/wordLookup (minus the learner's own words, which live in IndexedDB).
+const bankWords = new Set(ALL_VOCABULARY.map((v) => v.word.toLowerCase()));
+const isCovered = (word: string, materialWords: Set<string>) =>
+  lemmaCandidates(word).some((c) => materialWords.has(c) || bankWords.has(c) || Object.hasOwn(EN_JA_DICTIONARY, c));
+const uncovered = new Map<string, number>();
+const checkPassage = (text: string, materialWords: Set<string>) => {
+  for (const seg of tokenizeText(text, new Set(), [])) {
+    if (seg.kind !== 'word') continue;
+    const ok = isCovered(seg.text, materialWords) || seg.text.split('-').some((p) => p && isCovered(p, materialWords));
+    if (!ok) uncovered.set(seg.text.toLowerCase(), (uncovered.get(seg.text.toLowerCase()) ?? 0) + 1);
+  }
+};
+for (const m of ALL_MATERIALS) {
+  const materialWords = new Set(m.vocabulary.map((v) => v.word.toLowerCase()));
+  for (const p of m.content) checkPassage(p, materialWords);
+}
+for (const item of flattenToeicQuestions(ALL_TOEIC_QUESTIONS)) {
+  for (const line of item.contextLines ?? []) checkPassage(line, new Set());
+}
+if (uncovered.size > 0) {
+  warnings.push(
+    `[辞書未収録] 本文の単語 ${uncovered.size} 語が辞書にありません（src/data/dictionary/enJa.ts に追加してください）: ` +
+      [...uncovered.keys()].sort().join(', ')
+  );
 }
 
 console.log('=== Content counts ===');

@@ -18,10 +18,10 @@ const NO_VOCABULARY: readonly VocabularyItem[] = [];
 /** Provides tap-to-lookup to every WordInteractiveText inside it and renders the one shared
  * popover, so only one word is ever open at a time. */
 export default function WordLookupProvider({ children, vocabulary = NO_VOCABULARY, materialId, level }: WordLookupProviderProps) {
-  const [selection, setSelection] = useState<{ word: string; anchor: HTMLElement; key: number } | null>(null);
+  const [selection, setSelection] = useState<{ word: string; anchor: HTMLElement; contextSentence: string; key: number } | null>(null);
 
-  const openWord = useCallback((word: string, anchor: HTMLElement) => {
-    setSelection((prev) => ({ word, anchor, key: (prev?.key ?? 0) + 1 }));
+  const openWord = useCallback((word: string, anchor: HTMLElement, contextSentence: string) => {
+    setSelection((prev) => ({ word, anchor, contextSentence, key: (prev?.key ?? 0) + 1 }));
   }, []);
   const close = useCallback(() => setSelection(null), []);
 
@@ -50,6 +50,7 @@ export default function WordLookupProvider({ children, vocabulary = NO_VOCABULAR
           key={selection.key}
           word={selection.word}
           anchor={selection.anchor}
+          contextSentence={selection.contextSentence}
           vocabulary={vocabulary}
           materialId={materialId}
           level={level}

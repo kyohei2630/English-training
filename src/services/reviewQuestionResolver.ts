@@ -1,4 +1,13 @@
-import type { GrammarPoint, GrammarQuestion, Level, ReadingMaterial, ReviewItem, ToeicPart, WritingExercise } from '../types';
+import type {
+  GrammarPoint,
+  GrammarQuestion,
+  Level,
+  ReadingMaterial,
+  ReviewItem,
+  SavedWordInfo,
+  ToeicPart,
+  WritingExercise,
+} from '../types';
 import { loadGrammarLevel } from '../data/grammar/loader';
 import { loadReadingLevel } from '../data/reading/loader';
 import { loadToeicPart } from '../data/toeic/loader';
@@ -7,6 +16,7 @@ import { loadWritingById } from '../data/writing/loader';
 import { flattenToeicQuestions } from './toeicService';
 import { generateVocabQuiz } from './vocabularyQuiz';
 import { pickRandom, shuffle } from '../utils/random';
+import { CUSTOM_WORD_REF_PREFIX, DICTIONARY_WORD_REF_PREFIX, getDictionary, PART_OF_SPEECH_JA } from './wordLookup';
 
 export interface ReviewChoiceQuestion {
   contextTitle?: string;
@@ -69,6 +79,25 @@ function grammarPointToReorder(point: GrammarPoint, refId: string, level: Level)
   };
 }
 
+/** A word saved from the tap-to-lookup popover, asked as "what does it mean here?" with the
+ * passage sentence as context. Distractors are dictionary meanings of the same part of speech. */
+async function savedWordToChoice(word: SavedWordInfo): Promise<ReviewChoiceQuestion> {
+  const dict = await getDictionary().catch(() => ({}) as Awaited<ReturnType<typeof getDictionary>>);
+  const all = Object.entries(dict).filter(([w, [, m]]) => w !== word.headword && m !== word.meaningJa);
+  const samePos = all.filter(([, [pos]]) => pos === word.partOfSpeech).map(([, [, m]]) => m);
+  const distractors = pickRandom(samePos.length >= 3 ? samePos : all.map(([, [, m]]) => m), 3);
+  const choices = shuffle([word.meaningJa, ...distractors]);
+  const pos = word.partOfSpeech ? `（${PART_OF_SPEECH_JA[word.partOfSpeech] ?? word.partOfSpeech}）` : '';
+  return {
+    contextTitle: word.contextSentence ? '本文での使われ方' : undefined,
+    contextLines: word.contextSentence ? [word.contextSentence] : undefined,
+    prompt: word.surface !== word.headword ? `${word.surface}（原形: ${word.headword}）` : word.headword,
+    choices,
+    correctIndex: choices.indexOf(word.meaningJa),
+    explanation: `${word.headword}${pos}: ${word.meaningJa}`,
+  };
+}
+
 /** Looks up the source question for a review item via its refId. Returns null only when the
  * source content no longer exists, which the review screen shows as a flip card instead. */
 export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedReviewQuestion | null> {
@@ -93,6 +122,9 @@ export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedR
       return exercise ? { kind: 'writing', exercise } : null;
     }
     case 'vocabulary': {
+      if (item.word && (id.startsWith(DICTIONARY_WORD_REF_PREFIX) || id.startsWith(CUSTOM_WORD_REF_PREFIX))) {
+        return { kind: 'choice', question: await savedWordToChoice(item.word) };
+      }
       if (id.startsWith('vocab-')) {
         const source = await findBookmarkSource('vocab', id);
         const word = source?.material.vocabulary.find((v) => v.word === source.rest);

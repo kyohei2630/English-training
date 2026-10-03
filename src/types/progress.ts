@@ -21,6 +21,19 @@ export interface ReviewItem {
   level?: 1 | 2 | 3 | 4 | 5 | 6;
   /** current streak of consecutive correct answers, reset to 0 on a wrong answer */
   consecutiveCorrect?: number;
+  /** vocabulary saved from the tap-to-lookup word popover: the word with its context sentence */
+  word?: SavedWordInfo;
+}
+
+export interface SavedWordInfo {
+  /** the form that appeared in the text (e.g. "running") */
+  surface: string;
+  /** base form (e.g. "run") */
+  headword: string;
+  meaningJa: string;
+  partOfSpeech?: string;
+  /** the sentence of the passage the word was tapped in */
+  contextSentence?: string;
 }
 
 export type SectionKey = 'reading' | 'grammar' | 'writing' | 'review';

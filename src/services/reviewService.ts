@@ -1,9 +1,9 @@
-import type { GrammarPoint, Level, ReviewCategory, UnderstandingQuestion, VocabularyItem, WritingExercise } from '../types';
+import type { GrammarPoint, Level, ReviewCategory, UnderstandingQuestion, WritingExercise } from '../types';
 import { applyReviewAnswer, createReviewItem } from './reviewScheduler';
 import { getReviewItemByRef, upsertReviewItem } from '../db/repositories/reviewRepository';
 import { getProgress, saveProgress } from '../db/repositories/progressRepository';
-import type { ReviewItem } from '../types';
-import { CUSTOM_WORD_REF_PREFIX, reviewRefIdFor, type WordLookupResult } from './wordLookup';
+import type { ReviewItem, SavedWordInfo } from '../types';
+import { CUSTOM_WORD_REF_PREFIX, PART_OF_SPEECH_JA, reviewRefIdFor, type WordLookupResult } from './wordLookup';
 
 /**
  * Records one answer to any question in the app (correct or incorrect) as a review-deck
@@ -75,22 +75,6 @@ export async function recordWritingAnswer(exercise: WritingExercise, wasCorrect:
   });
 }
 
-export async function addWordToReview(word: VocabularyItem, materialId: string): Promise<void> {
-  const refId = `vocab-${materialId}-${word.word}`;
-  const existing = await getReviewItemByRef(refId);
-  if (existing) return; // already in review deck
-
-  const item = createReviewItem({
-    category: 'vocabulary',
-    refId,
-    promptText: word.word,
-    answerText: `${word.meaningJa}（${word.partOfSpeech}）`,
-    explanation: word.example,
-  });
-  await upsertReviewItem(item);
-  await addWeakWord(word.word);
-}
-
 async function addWeakWord(word: string): Promise<void> {
   const progress = await getProgress();
   if (!progress.weakWords.includes(word)) {
@@ -98,46 +82,80 @@ async function addWeakWord(word: string): Promise<void> {
   }
 }
 
-/** Adds a word looked up from any English text (WordInteractiveText) to the review deck and
- * the weak-words list, using the refId format that lets review quiz it as a real question. */
-export async function addLookedUpWordToReview(result: WordLookupResult, materialId?: string): Promise<void> {
-  if (result.materialItem && materialId) {
-    await addWordToReview(result.materialItem, materialId);
-    return;
-  }
-  const refId = reviewRefIdFor(result, materialId);
-  if (await getReviewItemByRef(refId)) return;
+function wordAnswerText(meaningJa: string, partOfSpeech?: string): string {
+  return partOfSpeech ? `${meaningJa}（${PART_OF_SPEECH_JA[partOfSpeech] ?? partOfSpeech}）` : meaningJa;
+}
 
-  const entry = result.bankEntry;
-  const pos = result.partOfSpeech ? `（${result.partOfSpeech}）` : '';
-  await upsertReviewItem(
-    createReviewItem({
+/** Adds a word looked up from any English text (WordInteractiveText) to the review deck and the
+ * weak-words list in one tap: the word, its base form, meaning, part of speech and the sentence it
+ * was tapped in are all saved. The refId format lets review quiz it as a real question. */
+export async function addLookedUpWordToReview(
+  result: WordLookupResult,
+  options: { materialId?: string; contextSentence?: string } = {}
+): Promise<void> {
+  const refId = reviewRefIdFor(result, options.materialId);
+  if (await getReviewItemByRef(refId)) return; // already in review deck
+
+  const meaningJa = result.meaningJa ?? '';
+  const word: SavedWordInfo = {
+    surface: result.surface,
+    headword: result.headword,
+    meaningJa,
+    partOfSpeech: result.partOfSpeech,
+    contextSentence: options.contextSentence,
+  };
+  const example = options.contextSentence ?? [result.exampleEn, result.exampleJa].filter(Boolean).join('\n');
+  await upsertReviewItem({
+    ...createReviewItem({
       category: 'vocabulary',
       refId,
       promptText: result.headword,
-      answerText: `${result.meaningJa ?? ''}${pos}`,
-      explanation: [result.exampleEn, result.exampleJa].filter(Boolean).join('\n') || undefined,
-      tag: entry?.category,
-      level: entry?.level,
-    })
-  );
+      answerText: wordAnswerText(meaningJa, result.partOfSpeech),
+      explanation: example || undefined,
+      tag: result.bankEntry?.category,
+      level: result.bankEntry?.level,
+    }),
+    word,
+  });
   await addWeakWord(result.headword);
 }
 
 /** Registers a word that is in no dictionary, with the meaning the learner typed in. It is
  * stored as a review-deck entry, which is also where later lookups find it (see wordLookup). */
-export async function registerCustomWord(params: { word: string; meaningJa: string; partOfSpeech?: string }): Promise<void> {
-  const word = params.word.trim().toLowerCase();
-  const refId = `${CUSTOM_WORD_REF_PREFIX}${word}`;
-  const pos = params.partOfSpeech ? `（${params.partOfSpeech}）` : '';
+export async function registerCustomWord(params: {
+  word: string;
+  surface: string;
+  meaningJa: string;
+  partOfSpeech?: string;
+  contextSentence?: string;
+}): Promise<void> {
+  const headword = params.word.trim().toLowerCase();
+  const refId = `${CUSTOM_WORD_REF_PREFIX}${headword}`;
+  const meaningJa = params.meaningJa.trim();
+  const word: SavedWordInfo = {
+    surface: params.surface,
+    headword,
+    meaningJa,
+    partOfSpeech: params.partOfSpeech,
+    contextSentence: params.contextSentence,
+  };
+  const answerText = wordAnswerText(meaningJa, params.partOfSpeech);
   const existing = await getReviewItemByRef(refId);
-  const answerText = `${params.meaningJa.trim()}${pos}`;
   await upsertReviewItem(
     existing
-      ? { ...existing, answerText, updatedAt: new Date().toISOString() }
-      : createReviewItem({ category: 'vocabulary', refId, promptText: word, answerText })
+      ? { ...existing, answerText, word, updatedAt: new Date().toISOString() }
+      : {
+          ...createReviewItem({
+            category: 'vocabulary',
+            refId,
+            promptText: headword,
+            answerText,
+            explanation: params.contextSentence,
+          }),
+          word,
+        }
   );
-  await addWeakWord(word);
+  await addWeakWord(headword);
 }
 
 export async function addGrammarToReview(point: GrammarPoint, materialId: string): Promise<void> {

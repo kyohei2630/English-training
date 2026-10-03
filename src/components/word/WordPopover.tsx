@@ -8,6 +8,8 @@ import { lookupWord, PART_OF_SPEECH_JA, reviewRefIdFor, type WordLookupResult } 
 interface WordPopoverProps {
   word: string;
   anchor: HTMLElement;
+  /** the sentence the word was tapped in, shown and saved as its in-context example */
+  contextSentence: string;
   vocabulary: readonly VocabularyItem[];
   materialId?: string;
   level?: Level;
@@ -21,6 +23,8 @@ const SOURCE_LABELS: Record<WordLookupResult['source'], string> = {
   material: 'この教材の重要語',
   bank: '語彙バンク',
   custom: 'マイ単語',
+  dictionary: '辞書',
+  compound: '複合語',
   unknown: '未登録単語',
 };
 
@@ -30,7 +34,20 @@ function posLabel(pos?: string): string | undefined {
   return pos ? (PART_OF_SPEECH_JA[pos] ?? pos) : undefined;
 }
 
-export default function WordPopover({ word, anchor, vocabulary, materialId, level, onClose }: WordPopoverProps) {
+/** The context sentence with the tapped word marked. */
+function ContextSentence({ sentence, word }: { sentence: string; word: string }) {
+  const i = sentence.indexOf(word);
+  if (i < 0) return <>{sentence}</>;
+  return (
+    <>
+      {sentence.slice(0, i)}
+      <mark className="rounded bg-yellow-200/70 px-0.5 font-bold text-inherit dark:bg-yellow-500/30">{word}</mark>
+      {sentence.slice(i + word.length)}
+    </>
+  );
+}
+
+export default function WordPopover({ word, anchor, contextSentence, vocabulary, materialId, level, onClose }: WordPopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [result, setResult] = useState<WordLookupResult | null>(null);
@@ -108,7 +125,7 @@ export default function WordPopover({ word, anchor, vocabulary, materialId, leve
   const handleAdd = async () => {
     if (!result) return;
     setSaving(true);
-    await addLookedUpWordToReview(result, materialId);
+    await addLookedUpWordToReview(result, { materialId, contextSentence });
     setSaving(false);
     setAdded(true);
   };
@@ -119,7 +136,7 @@ export default function WordPopover({ word, anchor, vocabulary, materialId, leve
     const meaningJa = form.meaningJa.trim();
     if (!headword || !meaningJa) return;
     setSaving(true);
-    await registerCustomWord({ word: headword, meaningJa, partOfSpeech: form.partOfSpeech || undefined });
+    await registerCustomWord({ word: headword, surface: word, meaningJa, partOfSpeech: form.partOfSpeech || undefined, contextSentence });
     setSaving(false);
     setRegistering(false);
     setResult((r) => r && { ...r, headword, source: 'custom', meaningJa, partOfSpeech: form.partOfSpeech || undefined });
@@ -138,12 +155,13 @@ export default function WordPopover({ word, anchor, vocabulary, materialId, leve
       style={position ? { top: position.top, left: position.left } : { top: 0, left: 0, visibility: 'hidden' }}
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="break-words text-xl font-bold text-slate-900 dark:text-slate-100">{word}</p>
-          {showHeadword && result.source !== 'unknown' && (
-            <p className="text-xs text-slate-500">原形: {result.headword}</p>
+        <p className="min-w-0 break-words text-xl font-bold text-slate-900 dark:text-slate-100">
+          {word}
+          {showHeadword && result.source !== 'unknown' && result.source !== 'compound' && (
+            <span className="ml-1.5 text-base font-medium text-slate-500">({result.headword})</span>
           )}
-        </div>
+          {result?.pronunciation && <span className="ml-2 text-sm font-normal text-slate-400">{result.pronunciation}</span>}
+        </p>
         <button
           onClick={onClose}
           aria-label="閉じる"
@@ -222,7 +240,7 @@ export default function WordPopover({ word, anchor, vocabulary, materialId, leve
           </div>
         </form>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {posLabel(result.partOfSpeech) && (
               <span className="rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -233,18 +251,16 @@ export default function WordPopover({ word, anchor, vocabulary, materialId, leve
               {SOURCE_LABELS[result.source]}
               {result.level ? ` Lv.${result.level}` : ''}
             </span>
-            {result.pronunciation && <span className="text-slate-400">{result.pronunciation}</span>}
           </div>
-          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{result.meaningJa}</p>
-          {result.exampleEn && (
-            <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              <p className="mb-1 text-xs font-medium text-slate-400">例文</p>
-              <p>{result.exampleEn}</p>
-              {result.exampleJa && <p className="mt-1 text-xs text-slate-500">{result.exampleJa}</p>}
+          <p className="text-lg font-bold leading-snug text-slate-900 dark:text-slate-100">{result.meaningJa}</p>
+          {contextSentence && (
+            <div className="rounded-xl bg-slate-50 p-3 text-sm leading-relaxed text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <p className="mb-1 text-xs font-medium text-slate-400">本文での使われ方</p>
+              <ContextSentence sentence={contextSentence} word={word} />
             </div>
           )}
           <Button variant={added ? 'secondary' : 'primary'} onClick={handleAdd} disabled={added !== false || saving}>
-            {added ? '✓ 復習（単語帳）に追加済み' : '復習（単語帳）に追加'}
+            {added ? '✓ 復習リストに追加済み' : '＋ 復習リストに追加'}
           </Button>
         </div>
       )}

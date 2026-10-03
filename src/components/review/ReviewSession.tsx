@@ -50,8 +50,8 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
     await recordReview(item, i === question.correctIndex);
   };
 
-  return (
-    <WordLookupProvider level={item.level}>
+  const content = (
+    <>
       {question.contextIsPassage && question.contextLines && (
         // Reading review shows the whole passage above the question, like the Reading step.
         <Card className="flex flex-col gap-4">
@@ -114,8 +114,11 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
           {isLast ? '結果を見る' : '次の問題へ'}
         </Button>
       )}
-    </WordLookupProvider>
+    </>
   );
+
+  // Word lookup is off for vocabulary items: tapping the word in its context would give the answer away.
+  return item.category === 'vocabulary' ? content : <WordLookupProvider level={item.level}>{content}</WordLookupProvider>;
 }
 
 /** Fallback for entries with no answerable source (e.g. words bookmarked while reading). */
