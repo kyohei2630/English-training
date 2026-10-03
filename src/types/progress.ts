@@ -32,7 +32,12 @@ export interface SavedWordInfo {
   headword: string;
   meaningJa: string;
   partOfSpeech?: string;
-  /** the sentence of the passage the word was tapped in */
+  /** the word's own basic example sentence and its translation (not taken from the passage) */
+  standardExampleEn?: string;
+  standardExampleJa?: string;
+  /** phrases the word is commonly used in */
+  collocations?: string[];
+  /** the sentence of the passage the word was tapped in (kept for reference only) */
   contextSentence?: string;
 }
 

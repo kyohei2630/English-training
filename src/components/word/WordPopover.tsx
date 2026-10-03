@@ -1,14 +1,20 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import type { Level, VocabularyItem } from '../../types';
 import Button from '../common/Button';
 import { getReviewItemByRef } from '../../db/repositories/reviewRepository';
 import { addLookedUpWordToReview, registerCustomWord } from '../../services/reviewService';
-import { lookupWord, PART_OF_SPEECH_JA, reviewRefIdFor, type WordLookupResult } from '../../services/wordLookup';
+import {
+  findWordInSentence,
+  lookupWord,
+  PART_OF_SPEECH_JA,
+  reviewRefIdFor,
+  type WordLookupResult,
+} from '../../services/wordLookup';
 
 interface WordPopoverProps {
   word: string;
   anchor: HTMLElement;
-  /** the sentence the word was tapped in, shown and saved as its in-context example */
+  /** the sentence the word was tapped in, shown folded away (the standard example comes first) */
   contextSentence: string;
   vocabulary: readonly VocabularyItem[];
   materialId?: string;
@@ -34,17 +40,21 @@ function posLabel(pos?: string): string | undefined {
   return pos ? (PART_OF_SPEECH_JA[pos] ?? pos) : undefined;
 }
 
-/** The context sentence with the tapped word marked. */
-function ContextSentence({ sentence, word }: { sentence: string; word: string }) {
-  const i = sentence.indexOf(word);
-  if (i < 0) return <>{sentence}</>;
-  return (
-    <>
-      {sentence.slice(0, i)}
-      <mark className="rounded bg-yellow-200/70 px-0.5 font-bold text-inherit dark:bg-yellow-500/30">{word}</mark>
-      {sentence.slice(i + word.length)}
-    </>
-  );
+/** A sentence with every form of `word` marked (accepted / accepts for "accept"). */
+function MarkedSentence({ sentence, word }: { sentence: string; word: string }) {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const [start, end] of findWordInSentence(sentence, word)) {
+    parts.push(sentence.slice(last, start));
+    parts.push(
+      <mark key={start} className="rounded bg-yellow-200/70 px-0.5 font-bold text-inherit dark:bg-yellow-500/30">
+        {sentence.slice(start, end)}
+      </mark>
+    );
+    last = end;
+  }
+  parts.push(sentence.slice(last));
+  return <>{parts}</>;
 }
 
 export default function WordPopover({ word, anchor, contextSentence, vocabulary, materialId, level, onClose }: WordPopoverProps) {
@@ -253,11 +263,38 @@ export default function WordPopover({ word, anchor, contextSentence, vocabulary,
             </span>
           </div>
           <p className="text-lg font-bold leading-snug text-slate-900 dark:text-slate-100">{result.meaningJa}</p>
-          {contextSentence && (
+          {result.standardExampleEn && (
             <div className="rounded-xl bg-slate-50 p-3 text-sm leading-relaxed text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              <p className="mb-1 text-xs font-medium text-slate-400">本文での使われ方</p>
-              <ContextSentence sentence={contextSentence} word={word} />
+              <p className="mb-1 text-xs font-medium text-slate-400">例文</p>
+              <p>
+                <MarkedSentence sentence={result.standardExampleEn} word={result.headword} />
+              </p>
+              {result.standardExampleJa && <p className="mt-1 text-slate-500 dark:text-slate-400">{result.standardExampleJa}</p>}
             </div>
+          )}
+          {result.collocations && result.collocations.length > 0 && (
+            <div>
+              <p className="mb-1 text-xs font-medium text-slate-400">よく使う組み合わせ</p>
+              <ul className="flex flex-wrap gap-1.5">
+                {result.collocations.map((c) => (
+                  <li
+                    key={c}
+                    className="rounded-lg border border-slate-200 px-2 py-0.5 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300"
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {contextSentence && (
+            // The passage sentence is secondary: the word is learned from its standard example.
+            <details className="text-xs text-slate-500 dark:text-slate-400">
+              <summary className="cursor-pointer py-1 font-medium">※本文での出現箇所</summary>
+              <p className="mt-1 leading-relaxed">
+                <MarkedSentence sentence={contextSentence} word={word} />
+              </p>
+            </details>
           )}
           <Button variant={added ? 'secondary' : 'primary'} onClick={handleAdd} disabled={added !== false || saving}>
             {added ? '✓ 復習リストに追加済み' : '＋ 復習リストに追加'}

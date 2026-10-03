@@ -16,7 +16,13 @@ import { loadWritingById } from '../data/writing/loader';
 import { flattenToeicQuestions } from './toeicService';
 import { generateVocabQuiz } from './vocabularyQuiz';
 import { pickRandom, shuffle } from '../utils/random';
-import { CUSTOM_WORD_REF_PREFIX, DICTIONARY_WORD_REF_PREFIX, getDictionary, PART_OF_SPEECH_JA } from './wordLookup';
+import {
+  CUSTOM_WORD_REF_PREFIX,
+  DICTIONARY_WORD_REF_PREFIX,
+  formatStandardExample,
+  getDictionary,
+  PART_OF_SPEECH_JA,
+} from './wordLookup';
 
 export interface ReviewChoiceQuestion {
   contextTitle?: string;
@@ -79,8 +85,11 @@ function grammarPointToReorder(point: GrammarPoint, refId: string, level: Level)
   };
 }
 
-/** A word saved from the tap-to-lookup popover, asked as "what does it mean here?" with the
- * passage sentence as context. Distractors are dictionary meanings of the same part of speech. */
+/** A word saved from the tap-to-lookup popover, asked by its base form with the word's own
+ * standard example as context (not the passage it was tapped in), so it is practised as general
+ * vocabulary. Words saved before standard examples existed get them from the dictionary; only a
+ * word with no standard example falls back to its passage sentence. Distractors are dictionary
+ * meanings of the same part of speech. */
 async function savedWordToChoice(word: SavedWordInfo): Promise<ReviewChoiceQuestion> {
   const dict = await getDictionary().catch(() => ({}) as Awaited<ReturnType<typeof getDictionary>>);
   const all = Object.entries(dict).filter(([w, [, m]]) => w !== word.headword && m !== word.meaningJa);
@@ -88,13 +97,22 @@ async function savedWordToChoice(word: SavedWordInfo): Promise<ReviewChoiceQuest
   const distractors = pickRandom(samePos.length >= 3 ? samePos : all.map(([, [, m]]) => m), 3);
   const choices = shuffle([word.meaningJa, ...distractors]);
   const pos = word.partOfSpeech ? `（${PART_OF_SPEECH_JA[word.partOfSpeech] ?? word.partOfSpeech}）` : '';
+
+  const entry = Object.hasOwn(dict, word.headword) ? dict[word.headword] : undefined;
+  const standard = word.standardExampleEn
+    ? word
+    : { standardExampleEn: entry?.[2], standardExampleJa: entry?.[3], collocations: entry?.[4] };
+  const context = standard.standardExampleEn
+    ? { contextTitle: '例文', contextLines: [standard.standardExampleEn] }
+    : word.contextSentence
+      ? { contextTitle: '※本文での出現箇所', contextLines: [word.contextSentence] }
+      : {};
   return {
-    contextTitle: word.contextSentence ? '本文での使われ方' : undefined,
-    contextLines: word.contextSentence ? [word.contextSentence] : undefined,
-    prompt: word.surface !== word.headword ? `${word.surface}（原形: ${word.headword}）` : word.headword,
+    ...context,
+    prompt: word.headword,
     choices,
     correctIndex: choices.indexOf(word.meaningJa),
-    explanation: `${word.headword}${pos}: ${word.meaningJa}`,
+    explanation: [`${word.headword}${pos}: ${word.meaningJa}`, formatStandardExample(standard)].filter(Boolean).join('\n'),
   };
 }
 
@@ -143,7 +161,8 @@ export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedR
             prompt: word.word,
             choices,
             correctIndex: choices.indexOf(word.meaningJa),
-            explanation: `${word.word}（${word.partOfSpeech}）: ${word.meaningJa}\n${word.example}`,
+            // Saved from the word popover: its standard example with translation and collocations.
+            explanation: `${word.word}（${word.partOfSpeech}）: ${word.meaningJa}\n${(item.word && formatStandardExample(item.word)) || word.example}`,
           },
         };
       }

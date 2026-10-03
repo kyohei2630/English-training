@@ -3,7 +3,13 @@ import { applyReviewAnswer, createReviewItem } from './reviewScheduler';
 import { getReviewItemByRef, upsertReviewItem } from '../db/repositories/reviewRepository';
 import { getProgress, saveProgress } from '../db/repositories/progressRepository';
 import type { ReviewItem, SavedWordInfo } from '../types';
-import { CUSTOM_WORD_REF_PREFIX, PART_OF_SPEECH_JA, reviewRefIdFor, type WordLookupResult } from './wordLookup';
+import {
+  CUSTOM_WORD_REF_PREFIX,
+  formatStandardExample,
+  PART_OF_SPEECH_JA,
+  reviewRefIdFor,
+  type WordLookupResult,
+} from './wordLookup';
 
 /**
  * Records one answer to any question in the app (correct or incorrect) as a review-deck
@@ -87,8 +93,10 @@ function wordAnswerText(meaningJa: string, partOfSpeech?: string): string {
 }
 
 /** Adds a word looked up from any English text (WordInteractiveText) to the review deck and the
- * weak-words list in one tap: the word, its base form, meaning, part of speech and the sentence it
- * was tapped in are all saved. The refId format lets review quiz it as a real question. */
+ * weak-words list in one tap: the word, its base form, meaning, part of speech, its standard
+ * example + translation + collocations, and (for reference) the sentence it was tapped in. The
+ * explanation is the standard example, so review practises the word independently of the passage.
+ * The refId format lets review quiz it as a real question. */
 export async function addLookedUpWordToReview(
   result: WordLookupResult,
   options: { materialId?: string; contextSentence?: string } = {}
@@ -102,16 +110,18 @@ export async function addLookedUpWordToReview(
     headword: result.headword,
     meaningJa,
     partOfSpeech: result.partOfSpeech,
+    standardExampleEn: result.standardExampleEn,
+    standardExampleJa: result.standardExampleJa,
+    collocations: result.collocations && [...result.collocations],
     contextSentence: options.contextSentence,
   };
-  const example = options.contextSentence ?? [result.exampleEn, result.exampleJa].filter(Boolean).join('\n');
   await upsertReviewItem({
     ...createReviewItem({
       category: 'vocabulary',
       refId,
       promptText: result.headword,
       answerText: wordAnswerText(meaningJa, result.partOfSpeech),
-      explanation: example || undefined,
+      explanation: formatStandardExample(result) || undefined,
       tag: result.bankEntry?.category,
       level: result.bankEntry?.level,
     }),

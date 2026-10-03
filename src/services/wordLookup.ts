@@ -19,8 +19,11 @@ export interface WordLookupResult {
   partOfSpeech?: string;
   meaningJa?: string;
   pronunciation?: string;
-  exampleEn?: string;
-  exampleJa?: string;
+  /** the word's own basic example sentence (from the word bank or dictionary), never a passage sentence */
+  standardExampleEn?: string;
+  standardExampleJa?: string;
+  /** phrases the word is commonly used in ("apply for", "depend on") */
+  collocations?: readonly string[];
   level?: Level;
   materialItem?: VocabularyItem;
   bankEntry?: VocabularyEntry;
@@ -260,23 +263,40 @@ export async function lookupWord(surface: string, options: WordLookupOptions = {
   ]);
   const material = new Map((options.materialVocabulary ?? []).map((v) => [v.word.toLowerCase(), v]));
 
+  const pickBank = (entries: VocabularyEntry[]) => entries.find((e) => e.level === options.preferredLevel) ?? entries[0];
+
+  /** The headword's standard example and collocations: the word bank's entry first, then the
+   * built-in dictionary (each source may fill in what the other lacks). */
+  const standardOf = (headword: string): Pick<WordLookupResult, 'standardExampleEn' | 'standardExampleJa' | 'collocations'> => {
+    const key = headword.toLowerCase();
+    const bankEntries = bank.get(key);
+    const b = bankEntries && pickBank(bankEntries);
+    const d = Object.hasOwn(dict, key) ? dict[key] : undefined;
+    const [en, ja] = b?.exampleEn ? [b.exampleEn, b.exampleJa] : [d?.[2], d?.[3]];
+    const collocations = b?.collocations?.length ? b.collocations : d?.[4];
+    return { standardExampleEn: en, standardExampleJa: ja, collocations };
+  };
+
   const find = (word: string): WordLookupResult | null => {
     for (const c of lemmaCandidates(word)) {
       const item = material.get(c);
       if (item) {
+        const standard = standardOf(item.word);
         return {
           surface,
           headword: item.word,
           source: 'material',
           partOfSpeech: item.partOfSpeech,
           meaningJa: item.meaningJa,
-          exampleEn: item.example,
+          ...standard,
+          // the material's own example is a general sentence too, but has no translation
+          standardExampleEn: standard.standardExampleEn ?? item.example,
           materialItem: item,
         };
       }
       const entries = bank.get(c);
       if (entries) {
-        const entry = entries.find((e) => e.level === options.preferredLevel) ?? entries[0];
+        const entry = pickBank(entries);
         return {
           surface,
           headword: entry.word,
@@ -284,16 +304,15 @@ export async function lookupWord(surface: string, options: WordLookupOptions = {
           partOfSpeech: entry.partOfSpeech,
           meaningJa: entry.meaningJa,
           pronunciation: entry.pronunciation,
-          exampleEn: entry.exampleEn,
-          exampleJa: entry.exampleJa,
+          ...standardOf(entry.word),
           level: entry.level,
           bankEntry: entry,
         };
       }
       const mine = custom.get(c);
-      if (mine) return { surface, headword: c, source: 'custom', ...mine };
+      if (mine) return { surface, headword: c, source: 'custom', ...mine, ...standardOf(c) };
       const entry = Object.hasOwn(dict, c) ? dict[c] : undefined;
-      if (entry) return { surface, headword: c, source: 'dictionary', partOfSpeech: entry[0], meaningJa: entry[1] };
+      if (entry) return { surface, headword: c, source: 'dictionary', partOfSpeech: entry[0], meaningJa: entry[1], ...standardOf(c) };
     }
     return null;
   };
@@ -325,6 +344,54 @@ export function reviewRefIdFor(result: WordLookupResult, materialId?: string): s
   if (result.bankEntry) return result.bankEntry.id;
   if (result.source === 'custom' || result.source === 'unknown') return `${CUSTOM_WORD_REF_PREFIX}${result.headword.toLowerCase()}`;
   return `${DICTIONARY_WORD_REF_PREFIX}${result.headword.toLowerCase()}`;
+}
+
+export interface StandardExample {
+  standardExampleEn?: string;
+  standardExampleJa?: string;
+  collocations?: readonly string[];
+}
+
+/** A word's standard example as plain text — "example\n訳\nコロケーション: a / b" — the form
+ * saved as a review item's explanation and shown after answering. */
+export function formatStandardExample({ standardExampleEn, standardExampleJa, collocations }: StandardExample): string {
+  return [
+    standardExampleEn,
+    standardExampleJa,
+    collocations?.length ? `コロケーション: ${collocations.join(' / ')}` : undefined,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/** Character ranges of `sentence` that are a form of `headword`, for highlighting the word in an
+ * example: inflected forms (accepted → accept), phrases word by word ("looking forward to" for
+ * "look forward to"; placeholders like "-ing" are skipped) and parts of hyphenated compounds
+ * ("water-resistant" for "resistant"). */
+export function findWordInSentence(sentence: string, headword: string): Array<[start: number, end: number]> {
+  const targets = headword.toLowerCase().split(/\s+/).filter((p) => /^[a-z]/.test(p));
+  if (targets.length === 0) return [];
+  // Words of the sentence, with hyphenated compounds also split into their parts.
+  const tokens: Array<{ start: number; end: number; lemmas: string[] }> = [];
+  for (const m of sentence.matchAll(WORD_RE)) {
+    tokens.push({ start: m.index, end: m.index + m[0].length, lemmas: lemmaCandidates(m[0]) });
+    if (targets.length === 1 && m[0].includes('-')) {
+      let offset = m.index;
+      for (const part of m[0].split('-')) {
+        tokens.push({ start: offset, end: offset + part.length, lemmas: lemmaCandidates(part) });
+        offset += part.length + 1;
+      }
+    }
+  }
+  const ranges: Array<[number, number]> = [];
+  for (let i = 0; i + targets.length <= tokens.length; i++) {
+    if (targets.every((t, k) => tokens[i + k].lemmas.includes(t))) {
+      ranges.push([tokens[i].start, tokens[i + targets.length - 1].end]);
+      if (targets.length === 1) continue;
+      i += targets.length - 1;
+    }
+  }
+  return ranges;
 }
 
 export const PART_OF_SPEECH_JA: Record<string, string> = {

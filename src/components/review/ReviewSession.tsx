@@ -140,7 +140,7 @@ function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
           <div className="mt-4 rounded-xl bg-blue-50 p-4 text-sm dark:bg-blue-950/40">
             <p className="mb-1 font-bold text-blue-800 dark:text-blue-300">答え</p>
             <p className="text-blue-900 dark:text-blue-200">{item.answerText}</p>
-            {item.explanation && <p className="mt-2 text-blue-700 dark:text-blue-400">{item.explanation}</p>}
+            {item.explanation && <p className="mt-2 whitespace-pre-line text-blue-700 dark:text-blue-400">{item.explanation}</p>}
           </div>
         ) : (
           <Button className="mt-4" variant="secondary" onClick={() => setRevealed(true)}>
