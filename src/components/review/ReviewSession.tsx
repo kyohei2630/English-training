@@ -4,6 +4,8 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import GrammarQuestionView from '../grammar/GrammarQuestionView';
 import WritingExerciseView from '../writing/WritingExerciseView';
+import WordInteractiveText from '../word/WordInteractiveText';
+import WordLookupProvider from '../word/WordLookupProvider';
 import { applyReviewAnswer } from '../../services/reviewScheduler';
 import { upsertReviewItem } from '../../db/repositories/reviewRepository';
 import {
@@ -49,15 +51,13 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
   };
 
   return (
-    <>
+    <WordLookupProvider level={item.level}>
       {question.contextIsPassage && question.contextLines && (
         // Reading review shows the whole passage above the question, like the Reading step.
         <Card className="flex flex-col gap-4">
           {question.contextTitle && <h2 className="text-xl font-bold">{question.contextTitle}</h2>}
           {question.contextLines.map((paragraph, i) => (
-            <p key={i} className="text-base leading-relaxed">
-              {paragraph}
-            </p>
+            <WordInteractiveText key={i} text={paragraph} className="text-base leading-relaxed" />
           ))}
         </Card>
       )}
@@ -67,9 +67,11 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
           <p className="mb-2 text-sm font-bold text-slate-500">{question.contextTitle}</p>
         )}
         {!question.contextIsPassage && question.contextLines && (
-          <div className="mb-4 whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800">
-            {question.contextLines.join('\n')}
-          </div>
+          <WordInteractiveText
+            as="div"
+            text={question.contextLines.join('\n')}
+            className="mb-4 whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800"
+          />
         )}
         <p className="mb-4 text-lg font-medium leading-relaxed">{question.prompt}</p>
         <div className="flex flex-col gap-2">
@@ -112,7 +114,7 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
           {isLast ? '結果を見る' : '次の問題へ'}
         </Button>
       )}
-    </>
+    </WordLookupProvider>
   );
 }
 

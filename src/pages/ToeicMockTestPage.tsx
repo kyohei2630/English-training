@@ -54,7 +54,7 @@ export default function ToeicMockTestPage() {
   }
 
   if (!result) {
-    return <ToeicQuestionRunner items={items} onComplete={(answers) => handleComplete(answers)} />;
+    return <ToeicQuestionRunner items={items} wordLookup={false} onComplete={(answers) => handleComplete(answers)} />;
   }
 
   const accuracy = result.totalQuestions === 0 ? 0 : Math.round((result.correct / result.totalQuestions) * 100);

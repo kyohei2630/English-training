@@ -3,13 +3,17 @@ import type { FlatToeicItem } from '../../services/toeicService';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { recordAnswer } from '../../services/reviewService';
+import WordInteractiveText from '../word/WordInteractiveText';
+import WordLookupProvider from '../word/WordLookupProvider';
 
 interface ToeicQuestionRunnerProps {
   items: FlatToeicItem[];
   onComplete: (answers: Map<string, number>, correctCount: number) => void;
+  /** tap-to-lookup on passage words; turned off for the mock test, where it would give answers away */
+  wordLookup?: boolean;
 }
 
-export default function ToeicQuestionRunner({ items, onComplete }: ToeicQuestionRunnerProps) {
+export default function ToeicQuestionRunner({ items, onComplete, wordLookup = true }: ToeicQuestionRunnerProps) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -53,7 +57,7 @@ export default function ToeicQuestionRunner({ items, onComplete }: ToeicQuestion
     }
   };
 
-  return (
+  const content = (
     <div className="flex flex-col gap-4">
       <p className="text-sm font-medium text-slate-500">
         Part {item.part} ・ {index + 1} / {items.length}
@@ -61,9 +65,11 @@ export default function ToeicQuestionRunner({ items, onComplete }: ToeicQuestion
       <Card>
         {item.passageTitle && <p className="mb-2 text-sm font-bold text-slate-500">{item.passageTitle}</p>}
         {item.contextLines && (
-          <div className="mb-4 whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800">
-            {item.contextLines.join('\n')}
-          </div>
+          <WordInteractiveText
+            as="div"
+            text={item.contextLines.join('\n')}
+            className="mb-4 whitespace-pre-line rounded-xl bg-slate-50 p-3 text-sm leading-relaxed dark:bg-slate-800"
+          />
         )}
         <p className="mb-4 text-lg font-medium leading-relaxed">{item.prompt}</p>
         <div className="flex flex-col gap-2">
@@ -108,4 +114,7 @@ export default function ToeicQuestionRunner({ items, onComplete }: ToeicQuestion
       )}
     </div>
   );
+
+  // Without a provider, WordInteractiveText renders the passage as plain text.
+  return wordLookup ? <WordLookupProvider level={6}>{content}</WordLookupProvider> : content;
 }

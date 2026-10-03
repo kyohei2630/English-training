@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import type { ReadingMaterial, VocabularyItem, GrammarPoint } from '../../types';
+import type { ReadingMaterial, GrammarPoint } from '../../types';
 import Card from '../common/Card';
-import HighlightedParagraph from './HighlightedParagraph';
-import VocabPopup from './VocabPopup';
+import WordInteractiveText from '../word/WordInteractiveText';
+import WordLookupProvider from '../word/WordLookupProvider';
 import GrammarPanel from './GrammarPanel';
 import SentenceStructureView from './SentenceStructureView';
 
@@ -20,7 +20,6 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 export default function ReadingView({ material }: ReadingViewProps) {
-  const [selectedWord, setSelectedWord] = useState<VocabularyItem | null>(null);
   const [selectedGrammar, setSelectedGrammar] = useState<GrammarPoint | null>(null);
 
   return (
@@ -38,17 +37,14 @@ export default function ReadingView({ material }: ReadingViewProps) {
         <h1 className="text-2xl font-bold">{material.title}</h1>
       </div>
 
-      <Card className="flex flex-col gap-4">
-        {material.content.map((paragraph, i) => (
-          <HighlightedParagraph
-            key={i}
-            text={paragraph}
-            vocabulary={material.vocabulary}
-            onWordClick={setSelectedWord}
-          />
-        ))}
-        <p className="text-xs text-slate-400">💡 青字の単語をタップすると意味が表示されます</p>
-      </Card>
+      <WordLookupProvider vocabulary={material.vocabulary} materialId={material.id} level={material.level}>
+        <Card className="flex flex-col gap-4">
+          {material.content.map((paragraph, i) => (
+            <WordInteractiveText key={i} text={paragraph} className="reading-prose text-lg leading-relaxed" />
+          ))}
+          <p className="text-xs text-slate-400">💡 単語をタップ（または長押し）すると意味が表示されます。青字はこの教材の重要語です</p>
+        </Card>
+      </WordLookupProvider>
 
       {material.grammarPoints.length > 0 && (
         <Card>
@@ -78,7 +74,6 @@ export default function ReadingView({ material }: ReadingViewProps) {
         </Card>
       )}
 
-      <VocabPopup word={selectedWord} materialId={material.id} onClose={() => setSelectedWord(null)} />
       <GrammarPanel point={selectedGrammar} materialId={material.id} onClose={() => setSelectedGrammar(null)} />
     </div>
   );
