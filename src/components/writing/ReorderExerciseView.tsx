@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
-import type { ReorderExercise } from '../../types';
+import type { ReorderExercise, SelfCheckStatus } from '../../types';
 import Button from '../common/Button';
+import SelfCheckPanel from './SelfCheckPanel';
 import { isReorderCorrect } from '../../services/writingEvaluator';
+import { buildSelfCheck } from '../../services/selfCheckService';
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -14,7 +16,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 interface ReorderExerciseViewProps {
   exercise: ReorderExercise;
-  onResult: (wasCorrect: boolean, userAnswerText: string) => void;
+  onResult: (status: SelfCheckStatus, userAnswerText: string, grading: 'auto' | 'self') => void;
 }
 
 export default function ReorderExerciseView({ exercise, onResult }: ReorderExerciseViewProps) {
@@ -22,6 +24,7 @@ export default function ReorderExerciseView({ exercise, onResult }: ReorderExerc
   const [available, setAvailable] = useState<string[]>(shuffledTokens);
   const [chosen, setChosen] = useState<string[]>([]);
   const [checked, setChecked] = useState<boolean | null>(null);
+  const [decision, setDecision] = useState<SelfCheckStatus | null>(null);
 
   const pick = (token: string, fromIndex: number) => {
     if (checked !== null) return;
@@ -48,7 +51,8 @@ export default function ReorderExerciseView({ exercise, onResult }: ReorderExerc
   };
 
   const handleNext = () => {
-    onResult(!!checked, chosen.join(' '));
+    if (checked) onResult('correct', chosen.join(' '), 'auto');
+    else if (decision) onResult(decision, chosen.join(' '), 'self');
   };
 
   return (
@@ -90,15 +94,27 @@ export default function ReorderExerciseView({ exercise, onResult }: ReorderExerc
             答え合わせ
           </Button>
         </div>
-      ) : (
-        <div className={`rounded-xl p-4 text-sm ${checked ? 'bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300' : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300'}`}>
-          <p className="mb-1 font-bold">{checked ? '正解！' : '不正解'}</p>
+      ) : checked ? (
+        <div className="rounded-xl bg-green-50 p-4 text-sm text-green-800 dark:bg-green-950/40 dark:text-green-300">
+          <p className="mb-1 font-bold">正解！（自動判定）</p>
           <p>正解: {exercise.correctOrder.join(' ')}</p>
           <p className="mt-1 text-slate-500 dark:text-slate-400">{exercise.translationJa}</p>
         </div>
+      ) : (
+        // A different order can still be correct English (e.g. where a time phrase goes).
+        <SelfCheckPanel
+          userAnswer={chosen.join(' ')}
+          answers={[exercise.correctOrder.join(' ')]}
+          info={buildSelfCheck(chosen.join(' '), [exercise.correctOrder.join(' ')], {
+            tag: exercise.tag,
+            extra: ['語順が違っても、英文として意味と文法が成り立つか'],
+          })}
+          translationJa={exercise.translationJa}
+          onDecide={setDecision}
+        />
       )}
 
-      {checked !== null && (
+      {(checked === true || decision !== null) && (
         <Button size="lg" onClick={handleNext}>
           次へ
         </Button>

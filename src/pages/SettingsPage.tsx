@@ -9,6 +9,8 @@ import { deleteAllSessions } from '../db/repositories/sessionRepository';
 import { deleteAllReviewItems } from '../db/repositories/reviewRepository';
 import { deleteAllToeicResults } from '../db/repositories/toeicResultRepository';
 import { deleteAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
+import { replaceAllAnswerLog } from '../db/repositories/answerLogRepository';
+import { deleteAssessmentDraft, replaceAllAssessments } from '../db/repositories/assessmentRepository';
 import { resetProgress } from '../db/repositories/progressRepository';
 import { CONTENT_STATS } from '../data/contentStats.generated';
 import type { Level } from '../types';
@@ -53,6 +55,9 @@ export default function SettingsPage() {
       deleteAllReviewItems(),
       deleteAllToeicResults(),
       deleteAllTheoryProgress(),
+      replaceAllAnswerLog([]),
+      replaceAllAssessments([]),
+      deleteAssessmentDraft(),
       resetProgress(),
     ]);
     setConfirmReset(false);

@@ -10,13 +10,22 @@ import { getAllReviewItems } from '../db/repositories/reviewRepository';
 import { getAllToeicResults } from '../db/repositories/toeicResultRepository';
 import { getAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
 import { computeLast7Days } from '../services/statsService';
-import { isMastered } from '../services/masteryService';
+import { STUDY_STATUS_LABELS, studyStatus, type StudyStatus } from '../services/masteryService';
 import { topWeaknesses } from '../services/weaknessAnalysis';
+import { selfGradedFromLog } from '../services/objectiveCounts';
+import { loadWritingLevel } from '../data/writing/loader';
 import { statusOf } from '../services/theoryService';
 import { LEVELS, getLevelInfo } from '../data/levels';
 import { TOTAL_CURRICULUM_DAYS } from '../services/curriculum';
 import { CONTENT_STATS } from '../data/contentStats.generated';
-import type { LearningSession, ReviewItem, TheoryProgress, ToeicResult } from '../types';
+import { getAllAnswerLog } from '../db/repositories/answerLogRepository';
+import { getAllAssessments } from '../db/repositories/assessmentRepository';
+import { computeAbilityProfile, formatRate } from '../services/abilityService';
+import { assessmentStatus } from '../services/assessmentService';
+import { AbilityProfileCard, AssessmentHistoryCard } from '../components/progress/AbilityProfileCard';
+import { todayLocalISODate } from '../utils/date';
+import { tagLabel } from '../data/grammar/tagLabels';
+import type { AnswerLogEntry, AssessmentResult, LearningSession, ReviewItem, TheoryProgress, ToeicResult } from '../types';
 
 const CATEGORY_LABELS_JA: Record<ReviewItem['category'], string> = {
   vocabulary: 'Vocabulary',
@@ -32,6 +41,10 @@ export default function ProgressPage() {
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [toeicResults, setToeicResults] = useState<ToeicResult[]>([]);
   const [theoryProgress, setTheoryProgress] = useState<TheoryProgress[]>([]);
+  const [answerLog, setAnswerLog] = useState<AnswerLogEntry[]>([]);
+  const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
+  /** 和文英訳・自由英作文: always self-graded, so never part of an objective accuracy */
+  const [openEndedIds, setOpenEndedIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +53,10 @@ export default function ProgressPage() {
       setReviewItems(await getAllReviewItems());
       setToeicResults(await getAllToeicResults());
       setTheoryProgress(await getAllTheoryProgress());
+      setAnswerLog(await getAllAnswerLog());
+      setAssessments(await getAllAssessments());
+      const writing = await Promise.all(([1, 2, 3, 4, 5, 6] as const).map((l) => loadWritingLevel(l)));
+      setOpenEndedIds(new Set(writing.flat().filter((w) => w.type === 'translate' || w.type === 'free').map((w) => w.id)));
     })();
   }, [progress.totalStudyDays]);
 
@@ -54,10 +71,22 @@ export default function ProgressPage() {
   const curriculumProgress = Math.min(100, Math.round((progress.currentDay / TOTAL_CURRICULUM_DAYS) * 100));
 
   const vocabularyItems = reviewItems.filter((i) => i.category === 'vocabulary');
-  const vocabularyMastered = vocabularyItems.filter((i) => isMastered(i)).length;
+  const countStatuses = (list: ReviewItem[]) =>
+    list.reduce(
+      (m, i) => {
+        m[studyStatus(i)]++;
+        return m;
+      },
+      { unlearned: 0, studied: 0, verified: 0, recheck: 0 } as Record<StudyStatus, number>
+    );
+  const vocabStatus = countStatuses(vocabularyItems);
+  const vocabularyStudied = vocabStatus.studied + vocabStatus.verified + vocabStatus.recheck;
+  // TOEIC is a separate measure; notes and saved-but-unanswered items count where they belong.
+  const allStatus = countStatuses(reviewItems.filter((i) => i.category !== 'toeic'));
 
   const latestToeic = toeicResults[0];
-  const weaknesses = topWeaknesses(reviewItems, 5, 3);
+  const alwaysSelfGraded = (refId: string) => openEndedIds.has(refId);
+  const weaknesses = topWeaknesses(reviewItems, 5, 3, { selfFromLog: selfGradedFromLog(answerLog), alwaysSelfGraded });
 
   const theoryStatuses = theoryProgress.map((p) => statusOf(p));
   const theoryMastered = theoryStatuses.filter((s) => s === 'mastered').length;
@@ -65,6 +94,15 @@ export default function ProgressPage() {
   const theoryTotal = CONTENT_STATS.grammarTheory.total;
   const theoryStarted = theoryMastered + theoryLearning;
   const weakGrammarTags = weaknesses.filter((w) => w.category === 'grammar');
+
+  const today = todayLocalISODate();
+  const abilityRows = computeAbilityProfile(reviewItems, answerLog, today, { alwaysSelfGraded });
+  const assessment = assessmentStatus(assessments, today);
+  const toeicItems = reviewItems.filter((i) => i.category === 'toeic');
+  const toeicRate = {
+    correct: toeicItems.reduce((n, i) => n + i.correctCount, 0),
+    total: toeicItems.reduce((n, i) => n + i.correctCount + i.incorrectCount, 0),
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -97,13 +135,45 @@ export default function ProgressPage() {
         </div>
       </Card>
 
+      <Card>
+        <h2 className="mb-1 text-sm font-bold text-slate-500 dark:text-slate-400">学習状況（TOEIC以外）</h2>
+        <p className="mb-3 text-xs text-slate-400">
+          以前の学習記録はすべて「学習済み」に含まれます。1週間以上あけて正解すると「現行基準で定着確認済み」になり、「再確認が必要」な項目は復習で出題されます。
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+          {(['studied', 'verified', 'recheck'] as StudyStatus[]).map((k) => (
+            <div
+              key={k}
+              className={`rounded-lg py-2 ${
+                k === 'verified'
+                  ? 'bg-green-100 dark:bg-green-950'
+                  : k === 'recheck'
+                    ? 'bg-amber-100 dark:bg-amber-950'
+                    : 'bg-slate-100 dark:bg-slate-800'
+              }`}
+            >
+              <p className="text-lg font-bold">{k === 'studied' ? allStatus.studied + allStatus.verified + allStatus.recheck : allStatus[k]}</p>
+              <p className="text-slate-500 dark:text-slate-400">{STUDY_STATUS_LABELS[k]}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <AbilityProfileCard rows={abilityRows} />
+
+      <AssessmentHistoryCard results={assessments} nextDate={assessment.nextDate} due={assessment.due} />
+
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="総学習日数" value={`${progress.totalStudyDays} 日`} />
         <StatCard label="連続学習日数" value={`🔥 ${progress.currentStreak} 日`} sub={`最長 ${progress.longestStreak} 日`} />
         <StatCard label="総学習時間" value={`${Math.round(progress.totalStudyMinutes / 6) / 10} 時間`} />
-        <StatCard label="Vocabulary習得数" value={`${vocabularyMastered} / ${vocabularyItems.length} 語`} />
+        <StatCard
+          label="Vocabulary 学習済み"
+          value={`${vocabularyStudied} 語`}
+          sub={`定着確認済み ${vocabStatus.verified}・再確認 ${vocabStatus.recheck}`}
+        />
         <StatCard label="Writing学習数" value={`${progress.writingCompleted} 問`} />
-        <StatCard label="TOEIC模擬テスト" value={`${progress.toeicMockTestsTaken} 回`} />
+        <StatCard label="TOEIC模擬テスト（別指標）" value={`${progress.toeicMockTestsTaken} 回`} sub={`TOEIC問題の正答率 ${formatRate(toeicRate)}`} />
         <StatCard
           label="収録コンテンツ総数"
           value={`${CONTENT_STATS.grammar.total + CONTENT_STATS.grammarTheory.total + CONTENT_STATS.grammarTerms.total + CONTENT_STATS.vocabulary.total + CONTENT_STATS.readingMaterials.total + CONTENT_STATS.readingQuestions.total + CONTENT_STATS.writing.total + CONTENT_STATS.toeic.total} 件`}
@@ -117,11 +187,11 @@ export default function ProgressPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <Card>
-          <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Reading正答率</p>
+          <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Reading正答率（累計）</p>
           <ProgressBar value={readingRate} label={`${readingRate}% (${progress.readingCorrect}/${progress.readingAttempted})`} colorClassName="bg-green-500" />
         </Card>
         <Card>
-          <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Grammar正答率</p>
+          <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Grammar正答率（累計）</p>
           <ProgressBar value={grammarRate} label={`${grammarRate}% (${progress.grammarCorrect}/${progress.grammarAttempted})`} colorClassName="bg-indigo-500" />
         </Card>
         <Card>
@@ -130,7 +200,7 @@ export default function ProgressPage() {
         </Card>
         {latestToeic && (
           <Card>
-            <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">最新TOEIC模擬テスト</p>
+            <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">最新TOEIC模擬テスト（別指標）</p>
             <p className="text-lg font-bold">{latestToeic.correct} / {latestToeic.totalQuestions}</p>
             <p className="text-xs text-slate-400">{latestToeic.estimatedScoreBand}</p>
           </Card>
@@ -165,7 +235,7 @@ export default function ProgressPage() {
             <div className="flex flex-wrap gap-1.5">
               {weakGrammarTags.map((w) => (
                 <span key={w.tag} className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                  {w.tag}
+                  {tagLabel(w.tag)}
                 </span>
               ))}
             </div>
@@ -191,7 +261,7 @@ export default function ProgressPage() {
                   <span className="mr-2 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                     {CATEGORY_LABELS_JA[w.category]}
                   </span>
-                  {w.tag}
+                  {tagLabel(w.tag)}
                 </span>
                 <span className="font-bold text-amber-700 dark:text-amber-400">正答率 {w.accuracy}%</span>
               </button>

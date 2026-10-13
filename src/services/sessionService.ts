@@ -4,9 +4,10 @@ import { getSessionByDate, saveSession } from '../db/repositories/sessionReposit
 import { getProgress, saveProgress } from '../db/repositories/progressRepository';
 import { getDueReviewItems } from '../db/repositories/reviewRepository';
 
-/** Base target minutes for a 30-minute day. Actual minutes shown to the user are
- * rebalanced by dailyPlanner.ts when the review queue is unusually large. */
-export const TARGET_MINUTES = { reading: 8, grammar: 8, writing: 7, review: 7 } as const;
+/** Target minutes for the standard ~25-minute day: review 5, new knowledge + practice
+ * (Grammar) 10, applied practice (Reading + Writing) 10. Rebalanced by dailyPlanner.ts when the
+ * review backlog is high. */
+export const TARGET_MINUTES = { reading: 5, grammar: 10, writing: 5, review: 5 } as const;
 
 function emptySession(date: string, day: number): LearningSession {
   return {
@@ -75,6 +76,17 @@ export async function addMinutes(section: SectionKey, minutes: number): Promise<
   const session = await getOrCreateTodaySession();
   session.minutesSpent[section] += minutes;
   await saveSession(session);
+}
+
+/** Busy-day mode: counts the minutes toward today's study time without completing the day's
+ * training (the curriculum day only advances when all four sections are done). */
+export async function addQuickMinutes(minutes: number): Promise<void> {
+  const session = await getOrCreateTodaySession();
+  await saveSession({
+    ...session,
+    quickMinutes: (session.quickMinutes ?? 0) + minutes,
+    minutesSpent: { ...session.minutesSpent, review: session.minutesSpent.review + minutes },
+  });
 }
 
 export function isSessionComplete(session: LearningSession): boolean {

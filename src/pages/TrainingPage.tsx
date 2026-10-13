@@ -7,6 +7,11 @@ import ReadingView from '../components/reading/ReadingView';
 import UnderstandingQuiz from '../components/reading/UnderstandingQuiz';
 import GrammarSession from '../components/grammar/GrammarSession';
 import WritingSession from '../components/writing/WritingSession';
+import SentenceBuildDrillView from '../components/writing/SentenceBuildDrillView';
+import { loadSentenceBuildDrills } from '../data/sentenceBuilding/loader';
+import { getAllReviewItems } from '../db/repositories/reviewRepository';
+import { getAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
+import { learnedGrammarTags, pickDrill } from '../services/sentenceBuildingService';
 import ReviewSession from '../components/review/ReviewSession';
 import { getDailyPlan, getUnderstandingQuestionsForDay, type DailyPlan } from '../services/curriculum';
 import {
@@ -14,9 +19,8 @@ import {
   markSectionProgress,
   completeTodaySession,
 } from '../services/sessionService';
-import { getDueReviewItems } from '../db/repositories/reviewRepository';
-import { todayLocalISODate } from '../utils/date';
-import type { LearningSession, ReviewItem, SectionKey, UnderstandingQuestion } from '../types';
+import { getTodayReview, markReviewPlanAnswer, type TodayReview } from '../services/reviewPlanService';
+import type { LearningSession, SectionKey, SentenceBuildDrill, UnderstandingQuestion } from '../types';
 
 type Step = SectionKey | 'complete';
 
@@ -26,6 +30,10 @@ const STEP_LABELS: Record<SectionKey, string> = {
   writing: 'Writing',
   review: 'Review',
 };
+
+/** New grammar questions per day while the review backlog is high and not shrinking (normally 6).
+ * New learning continues — just a little less of it until review catches up. */
+const GRAMMAR_PER_DAY_UNDER_LOAD = 4;
 
 function elapsedMinutesSince(startedAt: number): number {
   return Math.max(1, Math.round((Date.now() - startedAt) / 60000));
@@ -38,7 +46,10 @@ export default function TrainingPage() {
   const [questions, setQuestions] = useState<UnderstandingQuestion[]>([]);
   const [step, setStep] = useState<Step>('reading');
   const [readingPhase, setReadingPhase] = useState<'passage' | 'quiz'>('passage');
-  const [dueReviewItems, setDueReviewItems] = useState<ReviewItem[]>([]);
+  const [todayReview, setTodayReview] = useState<TodayReview | null>(null);
+  const [drill, setDrill] = useState<SentenceBuildDrill | null>(null);
+  const [writingPhase, setWritingPhase] = useState<'drill' | 'exercises'>('drill');
+  const [drillResult, setDrillResult] = useState({ correct: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const stepStartRef = useRef(Date.now());
 
@@ -48,20 +59,31 @@ export default function TrainingPage() {
       setSession(s);
       const firstIncomplete = (Object.keys(STEP_LABELS) as SectionKey[]).find((k) => !s.sectionsDone[k]);
       setStep(firstIncomplete ?? 'complete');
-      const [dailyPlan, dailyQuestions, due] = await Promise.all([
+      const [dailyPlan, dailyQuestions, review] = await Promise.all([
         getDailyPlan(s.day),
         getUnderstandingQuestionsForDay(s.day),
-        getDueReviewItems(todayLocalISODate()),
+        getTodayReview(),
       ]);
       setPlan(dailyPlan);
       setQuestions(dailyQuestions);
-      setDueReviewItems(due);
+      setTodayReview(review);
+      // Today's 英文組み立て: on today's grammar point if there is a drill for it, otherwise on
+      // grammar learned before.
+      const [drills, items, theory] = await Promise.all([loadSentenceBuildDrills(), getAllReviewItems(), getAllTheoryProgress()]);
+      const picked = pickDrill(drills, {
+        todayTags: dailyPlan.grammarQuestions.map((q) => q.tag),
+        level: dailyPlan.level,
+        learned: await learnedGrammarTags(items, theory),
+        items,
+      });
+      setDrill(picked);
+      setWritingPhase(picked ? 'drill' : 'exercises');
       setLoading(false);
       stepStartRef.current = Date.now();
     })();
   }, []);
 
-  if (loading || !session || !plan) {
+  if (loading || !session || !plan || !todayReview) {
     return <div className="py-20 text-center text-slate-400">読み込み中...</div>;
   }
 
@@ -104,18 +126,25 @@ export default function TrainingPage() {
     const updated = await markSectionProgress('writing', {
       sectionsDone: { ...session.sectionsDone, writing: true },
       minutesSpent: { ...session.minutesSpent, writing: minutes },
-      writingCompleted: completedCount,
+      writingCompleted: completedCount + drillResult.correct,
     });
     setSession(updated);
     void total;
+    // Refresh: today's grammar/writing practice may already have covered some assigned items.
+    setTodayReview(await getTodayReview());
     goToStep('review');
   };
 
-  const finishReview = async (correct: number, total: number) => {
+  // Review is complete when today's assigned questions are answered; whatever else is due is
+  // carried over to later days. The score covers the whole assignment, also across interruptions.
+  const finishReview = async () => {
+    // Objective score only: answers the learner judged themselves are not counted as right or wrong.
+    const { correctCount: correct, objectiveTotal: total } = await getTodayReview();
     const minutes = elapsedMinutesSince(stepStartRef.current);
     const updated = await markSectionProgress('review', {
       sectionsDone: { ...session.sectionsDone, review: true },
-      minutesSpent: { ...session.minutesSpent, review: minutes },
+      // Added, not replaced: busy-day (5-minute) review earlier today counts too.
+      minutesSpent: { ...session.minutesSpent, review: session.minutesSpent.review + minutes },
       reviewCorrect: correct,
       reviewTotal: total,
     });
@@ -168,24 +197,47 @@ export default function TrainingPage() {
           <GrammarSession
             theory={plan.grammarTheory}
             lessons={plan.grammarLessons}
-            questions={plan.grammarQuestions}
+            questions={
+              todayReview.plan.loadHigh ? plan.grammarQuestions.slice(0, GRAMMAR_PER_DAY_UNDER_LOAD) : plan.grammarQuestions
+            }
             onComplete={finishGrammar}
           />
         )}
 
-        {step === 'writing' && <WritingSession exercises={plan.writing} onComplete={finishWriting} />}
+        {step === 'writing' && drill && writingPhase === 'drill' && (
+          <SentenceBuildDrillView
+            drill={drill}
+            onComplete={(correct, total) => {
+              setDrillResult({ correct, total });
+              setWritingPhase('exercises');
+            }}
+          />
+        )}
+
+        {step === 'writing' && writingPhase === 'exercises' && (
+          // With a drill done, one of the day's two exercises keeps the step at about 5 minutes.
+          <WritingSession exercises={drill ? plan.writing.slice(0, 1) : plan.writing} onComplete={finishWriting} />
+        )}
 
         {step === 'review' &&
-          (dueReviewItems.length === 0 ? (
+          (todayReview.remaining.length === 0 ? (
             <Card className="flex flex-col items-center gap-4 py-10 text-center">
               <p className="text-4xl">🎉</p>
-              <p className="text-lg font-medium">今日復習する項目はありません</p>
-              <Button size="lg" onClick={() => finishReview(0, 0)}>
+              <p className="text-lg font-medium">
+                {todayReview.items.length === 0 ? '今日復習する項目はありません' : '今日の復習は完了しています'}
+              </p>
+              <Button size="lg" onClick={finishReview}>
                 トレーニングを完了する
               </Button>
             </Card>
           ) : (
-            <ReviewSession items={dueReviewItems} onComplete={finishReview} />
+            <ReviewSession
+              items={todayReview.remaining}
+              progressOffset={todayReview.doneCount}
+              progressTotal={todayReview.items.length}
+              onAnswered={(item, ok, grading) => markReviewPlanAnswer(item.id, ok, grading)}
+              onComplete={finishReview}
+            />
           ))}
 
         {step === 'complete' && (

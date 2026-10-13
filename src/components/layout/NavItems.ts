@@ -11,6 +11,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/vocabulary', label: 'Vocabulary', icon: '🧠' },
   { to: '/reading', label: 'Reading', icon: '📖' },
   { to: '/writing', label: 'Writing', icon: '✍️' },
+  { to: '/research', label: '研究英語', icon: '🔬' },
+  { to: '/notes', label: 'ノート課題', icon: '📓' },
   { to: '/toeic', label: 'TOEIC', icon: '📝' },
   { to: '/review', label: 'Review', icon: '🔄' },
   { to: '/progress', label: 'Progress', icon: '📊' },

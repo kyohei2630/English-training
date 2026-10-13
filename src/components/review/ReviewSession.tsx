@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReviewItem } from '../../types';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import GrammarQuestionView from '../grammar/GrammarQuestionView';
 import WritingExerciseView from '../writing/WritingExerciseView';
+import SentenceTaskView from '../writing/SentenceTaskView';
 import WordInteractiveText from '../word/WordInteractiveText';
 import WordLookupProvider from '../word/WordLookupProvider';
-import { applyReviewAnswer } from '../../services/reviewScheduler';
-import { upsertReviewItem } from '../../db/repositories/reviewRepository';
+import { saveAnswer } from '../../services/reviewService';
 import {
   resolveReviewQuestion,
   type ResolvedReviewQuestion,
@@ -22,8 +22,8 @@ const CATEGORY_LABELS: Record<ReviewItem['category'], string> = {
   toeic: 'TOEIC',
 };
 
-async function recordReview(item: ReviewItem, wasCorrect: boolean) {
-  await upsertReviewItem(applyReviewAnswer(item, wasCorrect));
+async function recordReview(item: ReviewItem, wasCorrect: boolean, grading: 'auto' | 'self' = 'auto') {
+  await saveAnswer(item, wasCorrect, { source: 'review', grading });
 }
 
 function CategoryBadge({ item }: { item: ReviewItem }) {
@@ -37,7 +37,7 @@ function CategoryBadge({ item }: { item: ReviewItem }) {
 interface ReviewQuestionProps {
   item: ReviewItem;
   isLast: boolean;
-  onNext: (wasCorrect: boolean) => void;
+  onNext: (wasCorrect: boolean, grading?: 'auto' | 'self') => void;
 }
 
 function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & { question: ReviewChoiceQuestion }) {
@@ -126,8 +126,8 @@ function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
   const [revealed, setRevealed] = useState(false);
 
   const handleAnswer = async (wasCorrect: boolean) => {
-    await recordReview(item, wasCorrect);
-    onNext(wasCorrect);
+    await recordReview(item, wasCorrect, 'self');
+    onNext(wasCorrect, 'self');
   };
 
   return (
@@ -165,14 +165,24 @@ function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
 
 interface ReviewSessionProps {
   items: ReviewItem[];
-  onComplete: (correctCount: number, totalCount: number) => void;
+  /** app-checked answers only; self-graded ones are counted separately (selfGradedCount) */
+  onComplete: (correctCount: number, totalCount: number, selfGradedCount: number) => void;
+  /** called after each answered item (e.g. to record it against today's review plan) */
+  onAnswered?: (item: ReviewItem, wasCorrect: boolean, grading: 'auto' | 'self') => Promise<void> | void;
+  /** when resuming part-way: questions already answered, and the size of the whole set */
+  progressOffset?: number;
+  progressTotal?: number;
 }
 
-export default function ReviewSession({ items, onComplete }: ReviewSessionProps) {
+export default function ReviewSession({ items, onComplete, onAnswered, progressOffset = 0, progressTotal }: ReviewSessionProps) {
   const [index, setIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [selfGradedCount, setSelfGradedCount] = useState(0);
   /** undefined = still loading the source question, null = no source (flip card) */
   const [resolved, setResolved] = useState<{ itemId: string; value: ResolvedReviewQuestion | null } | undefined>();
+
+  /** id of the item whose "next" is being handled, so a double tap can't skip a question */
+  const advancingRef = useRef<string | null>(null);
 
   const item = items[index] as ReviewItem | undefined;
 
@@ -200,17 +210,25 @@ export default function ReviewSession({ items, onComplete }: ReviewSessionProps)
 
   const isLast = index === items.length - 1;
 
-  const handleNext = (wasCorrect: boolean) => {
-    const nextCorrect = wasCorrect ? correctCount + 1 : correctCount;
+  const source = resolved?.itemId === item.id ? resolved.value : undefined;
+
+  const handleNext = async (wasCorrect: boolean, grading: 'auto' | 'self' = 'auto') => {
+    if (advancingRef.current === item.id) return;
+    advancingRef.current = item.id;
+    // A similar question stood in for this item: the answer counts for the item itself too.
+    if (source?.kind === 'grammar' && source.variantOf) await recordReview(item, wasCorrect, grading);
+    await onAnswered?.(item, wasCorrect, grading);
+    const self = grading === 'self';
+    const nextCorrect = wasCorrect && !self ? correctCount + 1 : correctCount;
+    const nextSelf = selfGradedCount + (self ? 1 : 0);
     if (isLast) {
-      onComplete(nextCorrect, items.length);
+      onComplete(nextCorrect, items.length - nextSelf, nextSelf);
     } else {
       setCorrectCount(nextCorrect);
+      setSelfGradedCount(nextSelf);
       setIndex((i) => i + 1);
     }
   };
-
-  const source = resolved?.itemId === item.id ? resolved.value : undefined;
 
   let body;
   if (source === undefined) {
@@ -219,7 +237,30 @@ export default function ReviewSession({ items, onComplete }: ReviewSessionProps)
     body = <FlipCardReview key={item.id} item={item} isLast={isLast} onNext={handleNext} />;
   } else if (source.kind === 'grammar') {
     // GrammarQuestionView records the answer to the review deck itself (same refId).
-    body = <GrammarQuestionView key={item.id} question={source.question} onDone={handleNext} />;
+    body = (
+      <>
+        {source.variantOf && (
+          <p className="w-fit rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            定着確認：同じ文法の初見問題
+          </p>
+        )}
+        <GrammarQuestionView key={item.id} question={source.question} onDone={handleNext} />
+      </>
+    );
+  } else if (source.kind === 'build') {
+    // SentenceTaskView records the answer to the review deck itself (same refId).
+    body = (
+      <Card>
+        <CategoryBadge item={item} />
+        <SentenceTaskView
+          key={item.id}
+          task={source.task}
+          source="review"
+          onDone={(r) => handleNext(r.status === 'correct' && !r.hintUsed, r.grading)}
+          doneLabel={isLast ? '結果を見る' : '次の問題へ'}
+        />
+      </Card>
+    );
   } else if (source.kind === 'writing') {
     // WritingExerciseView records the answer to the review deck itself (same refId).
     body = (
@@ -234,8 +275,13 @@ export default function ReviewSession({ items, onComplete }: ReviewSessionProps)
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm font-medium text-slate-500">
-        {index + 1} / {items.length}
+        {progressOffset + index + 1} / {progressTotal ?? items.length}
       </p>
+      {item.pendingSelfCheck && (
+        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+          前回「判断できない」とした問題です{item.pendingAnswer ? `（前回の解答: ${item.pendingAnswer}）` : ''}。もう一度解いて確認しましょう。
+        </p>
+      )}
       {body}
     </div>
   );

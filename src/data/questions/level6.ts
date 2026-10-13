@@ -916,7 +916,7 @@ export const level6Questions: UnderstandingQuestion[] = [
     question: 'What tone does the writer use in this email?',
     choices: ['Angry and demanding', 'Apologetic and polite', 'Careless and brief', 'Formal and cold'],
     correctIndex: 1,
-    explanation: '"I apologize for any inconvenience ... Thank you for your understanding and flexibility." とあります。',
+    explanation: '"I apologize for any inconvenience ... Thank you for your understanding and flexibility." とあります。I apologize（おわび）と Thank you for your understanding（感謝）から、丁寧でおわびを含む口調だと分かります。',
     skillTag: 'inference',
   },
   {

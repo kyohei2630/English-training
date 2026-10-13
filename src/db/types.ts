@@ -1,5 +1,15 @@
 import type { DBSchema } from 'idb';
-import type { LearningSession, ReviewItem, UserProgress, AppSettings, ToeicResult, TheoryProgress } from '../types';
+import type {
+  AnswerLogEntry,
+  AppSettings,
+  AssessmentDraft,
+  AssessmentResult,
+  LearningSession,
+  ReviewItem,
+  TheoryProgress,
+  ToeicResult,
+  UserProgress,
+} from '../types';
 
 export const DB_NAME = 'english-training-db';
 /**
@@ -9,8 +19,13 @@ export const DB_NAME = 'english-training-db';
  *     consecutiveCorrect) are optional and default at read time.
  * v3: adds `theoryProgress` store (Grammar Theory learning state: unlearned/learning/
  *     mastered per theory id). Purely additive — no existing store or field changes.
+ * v4: adds `answerLog` (one record per answer, for first-attempt / delayed / weekly measures)
+ *     and `assessments` (4-weekly ability checks). Purely additive.
+ * v5: adds `assessmentDrafts` (an assessment in progress, resumable) and rewrites old spellings
+ *     of grammar tags on reviewItems / answerLog to their internal ID (data/grammar/tagLabels.ts).
+ *     No record is removed.
  */
-export const DB_VERSION = 3;
+export const DB_VERSION = 5;
 
 export interface AppDBSchema extends DBSchema {
   sessions: {
@@ -39,5 +54,19 @@ export interface AppDBSchema extends DBSchema {
   theoryProgress: {
     key: string;
     value: TheoryProgress;
+  };
+  answerLog: {
+    key: string;
+    value: AnswerLogEntry;
+    indexes: { 'by-date': string };
+  };
+  assessments: {
+    key: string;
+    value: AssessmentResult;
+    indexes: { 'by-date': string };
+  };
+  assessmentDrafts: {
+    key: string;
+    value: AssessmentDraft;
   };
 }

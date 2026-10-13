@@ -21,7 +21,7 @@ export default function OnboardingModal() {
           <li>Level 6のTOEIC対策と並行して、論文を読む力を仕上げます</li>
         </ol>
         <p className="text-slate-500 dark:text-slate-400">
-          毎日「今日の30分トレーニング」を進めるだけで、自動的に最適な内容が用意されます。
+          毎日「Today's Training」（標準約25分：復習5分・新しい文法10分・Reading/Writing 10分）を進めるだけで、自動的に内容が用意されます。忙しい日は5分だけの学習もできます。
           設定画面から自由学習モードに切り替えることもできます。
         </p>
         <Button size="lg" onClick={dismiss}>

@@ -14,6 +14,10 @@ import ProgressPage from './pages/ProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import GrammarTheoryPage from './pages/GrammarTheoryPage';
 import GrammarTermsPage from './pages/GrammarTermsPage';
+import NotesPage from './pages/NotesPage';
+import ResearchPage from './pages/ResearchPage';
+import AssessmentPage from './pages/AssessmentPage';
+import QuickStudyPage from './pages/QuickStudyPage';
 
 export default function App() {
   return (
@@ -34,6 +38,10 @@ export default function App() {
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/research" element={<ResearchPage />} />
+          <Route path="/assessment" element={<AssessmentPage />} />
+          <Route path="/quick" element={<QuickStudyPage />} />
         </Route>
       </Routes>
     </HashRouter>

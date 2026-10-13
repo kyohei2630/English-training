@@ -753,7 +753,7 @@ export const level1GrammarTheory: GrammarTheory[] = [
   {
     id: 'theory-l1-21',
     level: 1,
-    tag: 'There is/are',
+    tag: 'there-is-are',
     title: 'There is / There are 構文',
     shortDescription: '「〜がある/いる」と存在を伝える。',
     concept:

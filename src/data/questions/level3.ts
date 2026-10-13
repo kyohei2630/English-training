@@ -244,7 +244,7 @@ export const level3Questions: UnderstandingQuestion[] = [
     question: 'What does the passage suggest slow travel could help solve?',
     choices: ['Traffic congestion', 'Overcrowding in historic towns', 'Airline ticket prices', 'Language barriers'],
     correctIndex: 1,
-    explanation: '"Slow travel, therefore, is not only a personal choice but also a possible solution to a larger problem" とあります。',
+    explanation: '"Slow travel, therefore, is not only a personal choice but also a possible solution to a larger problem" とあります。a larger problem は、前の段落で述べた「歴史的な町の過密（overcrowding）」を指しています。',
     skillTag: 'main-idea',
   },
   {
@@ -270,7 +270,7 @@ export const level3Questions: UnderstandingQuestion[] = [
     question: 'What can be inferred about most consumers, according to the passage?',
     choices: ['They fully understand the labor behind services', 'They rarely think about the labor behind services', 'They refuse to use convenient services', 'They pay delivery workers directly'],
     correctIndex: 1,
-    explanation: '"As consumers, we rarely see the labor hidden behind convenience" とあります。',
+    explanation: '"As consumers, we rarely see the labor hidden behind convenience" とあります。rarely see（めったに目にしない）を、選択肢では rarely think about（めったに考えない）と言い換えています。',
     skillTag: 'inference',
   },
   {

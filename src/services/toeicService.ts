@@ -2,6 +2,14 @@ import type { ToeicPart, ToeicQuestion, ToeicResult } from '../types';
 import { generateId } from '../utils/id';
 import { pickRandom } from '../utils/random';
 import { todayLocalISODate } from '../utils/date';
+import { TOEIC_QUESTION_EXPLANATIONS } from '../data/toeic/questionExplanations';
+
+/** A question's own explanation first, then the summary of the conversation / passage. */
+function withOwnExplanation(id: string, setExplanation: string): string {
+  const own = TOEIC_QUESTION_EXPLANATIONS[id];
+  return own ? `${own}
+（全体: ${setExplanation}）` : setExplanation;
+}
 
 export interface FlatToeicItem {
   id: string;
@@ -55,7 +63,7 @@ export function flattenToeicQuestions(questions: ToeicQuestion[]): FlatToeicItem
             prompt: sub.question,
             choices: sub.choices,
             correctIndex: sub.correctIndex,
-            explanation: q.explanation,
+            explanation: withOwnExplanation(sub.id, q.explanation),
           });
         }
         break;
@@ -69,7 +77,7 @@ export function flattenToeicQuestions(questions: ToeicQuestion[]): FlatToeicItem
             prompt: sub.question,
             choices: sub.choices,
             correctIndex: sub.correctIndex,
-            explanation: q.explanation,
+            explanation: withOwnExplanation(sub.id, q.explanation),
           });
         }
         break;
@@ -95,7 +103,7 @@ export function flattenToeicQuestions(questions: ToeicQuestion[]): FlatToeicItem
             prompt: `空欄 (${i + 1}) に入る最も適切な語句を選びなさい。`,
             choices: blank.choices,
             correctIndex: blank.correctIndex,
-            explanation: q.explanation,
+            explanation: withOwnExplanation(`${q.id}_blank${i + 1}`, q.explanation),
           });
         });
         break;
@@ -110,7 +118,7 @@ export function flattenToeicQuestions(questions: ToeicQuestion[]): FlatToeicItem
             prompt: sub.question,
             choices: sub.choices,
             correctIndex: sub.correctIndex,
-            explanation: q.explanation,
+            explanation: withOwnExplanation(sub.id, q.explanation),
           });
         }
         break;

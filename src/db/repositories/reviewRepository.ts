@@ -1,12 +1,15 @@
 import { getDB } from '../indexedDB';
 import type { ReviewItem } from '../../types';
+import { isReviewCandidate } from '../../services/reviewScheduler';
 
+/** Every due item in the review queue (the whole backlog). Screens ask only today's selection
+ * of these — see reviewPlanService. */
 export async function getDueReviewItems(today: string): Promise<ReviewItem[]> {
   try {
     const db = await getDB();
     const all = await db.getAll('reviewItems');
     return all
-      .filter((item) => item.nextReviewDate <= today)
+      .filter((item) => isReviewCandidate(item) && item.nextReviewDate <= today)
       .sort((a, b) => a.nextReviewDate.localeCompare(b.nextReviewDate));
   } catch (err) {
     console.error('Failed to read review items from IndexedDB', err);

@@ -2,15 +2,19 @@ import { useState } from 'react';
 import type { TranslateExercise, FreeWritingExercise } from '../../types';
 import Button from '../common/Button';
 import { evaluateAgainstKeywords } from '../../services/writingEvaluator';
+import SelfCheckPanel from './SelfCheckPanel';
+import { buildSelfCheck } from '../../services/selfCheckService';
+import type { SelfCheckStatus } from '../../types';
 
 interface OpenEndedExerciseViewProps {
   exercise: TranslateExercise | FreeWritingExercise;
-  onResult: (wasCorrect: boolean, userAnswerText: string) => void;
+  onResult: (status: SelfCheckStatus, userAnswerText: string, grading: 'auto' | 'self') => void;
 }
 
 export default function OpenEndedExerciseView({ exercise, onResult }: OpenEndedExerciseViewProps) {
   const [answer, setAnswer] = useState('');
   const [revealed, setRevealed] = useState(false);
+  const [decision, setDecision] = useState<SelfCheckStatus | null>(null);
 
   const keywords = exercise.type === 'translate' ? exercise.keyPoints : exercise.keyExpressions;
   const evaluation = revealed ? evaluateAgainstKeywords(answer, keywords) : null;
@@ -73,17 +77,21 @@ export default function OpenEndedExerciseView({ exercise, onResult }: OpenEndedE
             </div>
           )}
 
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-            自己評価: 自分の回答は模範解答に近かったですか？
-          </p>
-          <div className="flex gap-2">
-            <Button variant="secondary" className="flex-1" onClick={() => onResult(false, answer)}>
-              もう少し練習が必要
+          <SelfCheckPanel
+            userAnswer={answer}
+            answers={exercise.sampleAnswers}
+            info={buildSelfCheck(answer, exercise.sampleAnswers, {
+              tag: exercise.tag,
+              extra: exercise.type === 'free' ? exercise.grammarPoints : undefined,
+            })}
+            neverAutoGraded
+            onDecide={setDecision}
+          />
+          {decision && (
+            <Button size="lg" onClick={() => onResult(decision, answer, 'self')}>
+              次へ
             </Button>
-            <Button className="flex-1" onClick={() => onResult(true, answer)}>
-              できた！
-            </Button>
-          </div>
+          )}
         </div>
       )}
     </div>

@@ -390,3 +390,64 @@ export type ToeicQuestion =
   | ToeicPart5Question
   | ToeicPart6Question
   | ToeicPart7Question;
+
+// ---------------------------------------------------------------------------
+// Sentence building (英文組み立て): grow one short sentence step by step
+// ---------------------------------------------------------------------------
+
+/** base = 基本文 / expand = 情報の追加 / transform = 構文の変更 / apply = 別の文脈での応用 */
+export type SentenceBuildStepKind = 'base' | 'expand' | 'transform' | 'apply';
+
+export interface SentenceBuildStep {
+  kind: SentenceBuildStepKind;
+  promptJa: string;
+  /** accepted answers; the first one is the model answer */
+  answers: string[];
+  hintJa?: string;
+}
+
+export interface SentenceBuildDrill {
+  id: string;
+  level: Level;
+  /** the GrammarQuestion/GrammarTheory tag this drill practises */
+  grammarTag: string;
+  titleJa: string;
+  /** the sentence pattern being built, e.g. "主語 + be動詞 + 補語" */
+  patternJa: string;
+  steps: SentenceBuildStep[];
+}
+
+// ---------------------------------------------------------------------------
+// Research English (研究英語): short research texts, purpose -> abstract
+// ---------------------------------------------------------------------------
+
+export type ResearchSection = 'purpose' | 'methods' | 'results' | 'discussion' | 'abstract';
+
+export interface ResearchUnit {
+  id: string;
+  level: Level;
+  section: ResearchSection;
+  titleJa: string;
+  /** English sentences of the text */
+  passage: string[];
+  translationJa: string;
+  /** one key sentence broken into roles */
+  structure: SentenceStructure;
+  /** logical connectors and what they signal */
+  logic: { marker: string; relationJa: string; explanationJa: string }[];
+  /** academic expressions worth reusing */
+  expressions: { en: string; ja: string; noteJa?: string }[];
+  question: {
+    question: string;
+    choices: [string, string, string, string];
+    correctIndex: 0 | 1 | 2 | 3;
+    explanation: string;
+  };
+  writing: {
+    promptJa: string;
+    /** accepted answers; the first one is the model */
+    answers: string[];
+    /** phrases a good answer contains (used for feedback, not for a pass/fail) */
+    keyPhrases: string[];
+  };
+}

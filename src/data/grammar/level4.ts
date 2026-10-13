@@ -192,7 +192,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '数値表現',
     question: 'Normal blood pressure is around 120/80 ___ (unit for blood pressure).',
     correctAnswer: 'mmHg',
-    explanation: '血圧の単位はmmHg（水銀柱ミリメートル）です。',
+    explanation: '血圧の単位はmmHg（水銀柱ミリメートル）です。120/80 は「収縮期血圧/拡張期血圧」の順です。論文では 120/80 mmHg のように数字と単位の間にスペースを入れます。',
     translationJa: '正常血圧はおよそ120/80 mmHgである。',
   },
   {
@@ -267,7 +267,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: '次の日本語を英語にしなさい: 「患者の血圧は5分ごとに測定された。」',
     correctAnswer: "The patient's blood pressure was measured every five minutes.",
-    explanation: '受動態was measuredを使います。',
+    explanation: '受動態was measuredを使います。every five minutes で「5分ごとに」。Methods では誰が測ったかより何をしたかが重要なので、受動態で書くのが一般的です。',
     translationJa: '患者の血圧は5分ごとに測定された。',
   },
   {
@@ -279,7 +279,13 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: 'The results ___ published in a medical journal next year.',
     choices: ['will', 'will be', 'are', 'were'],
     correctAnswer: 'will be',
-    explanation: '未来の受動態はwill be＋過去分詞です。',
+    explanation: '未来の受動態はwill be＋過去分詞です。結果は「発表される」側で、next year なので未来の受け身です。',
+    whyOthersWrong: [
+      'will: will published では受け身になりません。',
+      '(正解)',
+      'are: 現在形では next year と合いません。',
+      'were: 過去形は next year と合いません。',
+    ],
     translationJa: 'その結果は来年、医学雑誌に発表される予定だ。',
   },
   {
@@ -302,7 +308,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: 'The dosage should ___ (adjust) according to body weight.',
     correctAnswer: 'be adjusted',
-    explanation: '助動詞の後の受動態はbe＋過去分詞です。',
+    explanation: '助動詞の後の受動態はbe＋過去分詞です。should の後は原形 be、その後に過去分詞 adjusted です。according to body weight は「体重に応じて」です。',
     translationJa: '投与量は体重に応じて調整されるべきです。',
   },
   {
@@ -314,7 +320,13 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: '正しい文を選びなさい',
     choices: ['The tumor was detect by the scan.', 'The tumor was detected by the scan.', 'The tumor detected by the scan.', 'The tumor is detect by the scan yesterday.'],
     correctAnswer: 'The tumor was detected by the scan.',
-    explanation: '過去の受動態はwas/were＋過去分詞です。',
+    explanation: '過去の受動態はwas/were＋過去分詞です。受け身は be動詞＋過去分詞で、時制は be動詞で表します。',
+    whyOthersWrong: [
+      'was detect: be動詞の後は過去分詞 detected です。',
+      '(正解)',
+      'The tumor detected by the scan: be動詞がないので文になりません（名詞句）。',
+      'is detect ... yesterday: 過去分詞でなく、yesterday とも合いません。',
+    ],
     translationJa: 'その腫瘍はスキャンによって発見された。',
   },
   {
@@ -323,10 +335,16 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     level: 4,
     format: 'choice4',
     tag: '受動態',
-    question: 'The infection ___ likely transmitted through contaminated water.',
+    question: 'The infection in last year\'s outbreak ___ likely transmitted through contaminated water.',
     choices: ['is', 'was', 'has', 'do'],
     correctAnswer: 'was',
-    explanation: '過去の出来事を推測する文脈では受動態was transmittedを使います。',
+    explanation: 'last year\'s outbreak（昨年の流行）のことなので過去の受動態 was transmitted です（likely は「おそらく」）。',
+    whyOthersWrong: [
+      'is: 昨年の出来事なので現在形は合いません。',
+      '(正解)',
+      'has: has transmitted は能動態で、感染が「媒介した」ことになります。',
+      'do: do の後に過去分詞は置けません。',
+    ],
     translationJa: 'その感染は汚染された水を介して伝染した可能性が高い。',
   },
   {
@@ -338,7 +356,13 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: 'The recovery rate was ___ in the treatment group than in the control group.',
     choices: ['high', 'higher', 'highest', 'more high'],
     correctAnswer: 'higher',
-    explanation: 'thanを伴う比較級higherが正解です。',
+    explanation: 'thanを伴う比較級higherが正解です。比較する2つのグループを in the treatment group than in the control group と前置詞をそろえて並べます。',
+    whyOthersWrong: [
+      'high: than があるので原級は使えません。',
+      '(正解)',
+      'highest: 最上級は than と使いません。',
+      'more high: 1音節の形容詞は -er を付けます。',
+    ],
     translationJa: '回復率は治療群の方が対照群より高かった。',
   },
   {
@@ -383,7 +407,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: '次の日本語を英語にしなさい: 「この薬はあの薬と同じくらい効果的だ。」',
     correctAnswer: 'This medicine is as effective as that one.',
-    explanation: '同等比較as 原級 asです。',
+    explanation: '同等比較as 原級 asです。that one は that medicine の言い換えです。効果が劣るなら not as effective as、上回るなら more effective than です。',
     translationJa: 'この薬はあの薬と同じくらい効果的だ。',
   },
   {
@@ -418,7 +442,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: 'Blood flow velocity was ___ (low) in the narrowed segment than in the normal segment.',
     correctAnswer: 'lower',
-    explanation: '1音節の形容詞lowの比較級lowerです。',
+    explanation: '1音節の形容詞lowの比較級lowerです。比較の対象は in the narrowed segment と in the normal segment で、前置詞をそろえて比べます。',
     translationJa: '血流速度は狭窄部の方が正常部よりも低かった。',
   },
   {
@@ -511,7 +535,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: '"The device, which was approved last year, is now widely used." のwhichは非制限用法である。',
     choices: ['正しい', '誤り'],
     correctAnswer: '正しい',
-    explanation: 'コンマの後にあるので非制限用法です。',
+    explanation: 'コンマの後にあるので非制限用法です。非制限用法の関係詞節は補足情報なので、外しても文が成り立ちます（The device is now widely used.）。非制限用法では that は使いません。',
     translationJa: 'その機器は昨年承認され、今では広く使われている。',
   },
   {
@@ -545,7 +569,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '因果関係',
     question: 'Untreated hypertension can ___ (lead to) serious complications.',
     correctAnswer: 'lead to',
-    explanation: '「〜につながる」はlead toで表します。',
+    explanation: '「〜につながる」はlead toで表します。can lead to は「（場合によっては）〜につながりうる」と可能性を示します。論文では断定を避ける言い方としてよく使われます。',
     translationJa: '治療されていない高血圧は深刻な合併症につながることがある。',
   },
   {
@@ -568,7 +592,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '因果関係',
     question: '次の文の誤りを直しなさい: "Obesity can contributes to diabetes."',
     correctAnswer: 'Obesity can contribute to diabetes.',
-    explanation: '助動詞canの後の動詞は原形にします。',
+    explanation: '助動詞canの後の動詞は原形にします。contribute to は「〜の一因となる」で、唯一の原因とは言わない表現です。',
     translationJa: '肥満は糖尿病の一因となりうる。',
   },
   {
@@ -579,7 +603,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '因果関係',
     question: '次の日本語を英語にしなさい: 「脱水は疲労を引き起こすことがある。」',
     correctAnswer: 'Dehydration can cause fatigue.',
-    explanation: '因果関係を表すcauseを使います。',
+    explanation: '因果関係を表すcauseを使います。can は「〜することがある」という可能性を表します。cause の代わりに lead to も使えます（Dehydration can lead to fatigue.）。',
     translationJa: '脱水は疲労を引き起こすことがある。',
   },
   {
@@ -612,9 +636,9 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     level: 4,
     format: 'fillblank',
     tag: '因果関係',
-    question: 'The side effect was ___ (result from) an allergic reaction.',
+    question: 'The side effect was ___ (result) an allergic reaction.',
     correctAnswer: 'the result of',
-    explanation: '"the result of 〜"は「〜の結果」という名詞表現です。',
+    explanation: '「〜の結果」は the result of ＋名詞です。動詞で書くなら The side effect resulted from an allergic reaction. となります（was result from とはしません）。',
     translationJa: 'その副作用はアレルギー反応の結果だった。',
   },
   {
@@ -637,7 +661,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '数値表現',
     question: 'The tumor was approximately 3 ___ (cm) in diameter.',
     correctAnswer: 'cm',
-    explanation: '直径を表す単位センチメートルはcmと略します。',
+    explanation: '直径を表す単位センチメートルはcmと略します。単位の記号には s を付けず（3 cm）、ピリオドも打ちません。in diameter は「直径で」です。',
     translationJa: 'その腫瘍は直径約3センチだった。',
   },
   {
@@ -672,7 +696,13 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: 'The infusion rate was set at 50 ___ per hour.',
     choices: ['milliliter', 'milliliters', 'milliliter\'s', 'millilitre'],
     correctAnswer: 'milliliters',
-    explanation: '数値+単位の場合、単位は複数形milllitersにします。',
+    explanation: '数値＋単位で2以上のときは、単位を複数形 milliliters にします（50 milliliters）。',
+    whyOthersWrong: [
+      'milliliter: 2以上の数には複数形を使います。',
+      '(正解)',
+      'milliliter\'s: 所有格で、単位には使いません。',
+      'millilitre: イギリス式つづりの単数形で、複数形になっていません。',
+    ],
     translationJa: '点滴速度は1時間あたり50ミリリットルに設定された。',
   },
   {
@@ -799,9 +829,9 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     level: 4,
     format: 'fillblank',
     tag: '因果関係',
-    question: 'The infection was caused ___ (by) a bacteria.',
+    question: 'The infection was caused ___ (by) bacteria.',
     correctAnswer: 'by',
-    explanation: '"caused by ~"で「〜によって引き起こされた」を表します。',
+    explanation: '"caused by ~"で「〜によって引き起こされた」を表します。（bacteria は複数形で、単数は bacterium です）',
     translationJa: 'その感染症は細菌によって引き起こされた。',
   },
   {
@@ -884,7 +914,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: '次の語を並べ替えて、正しい英文を作りなさい。',
     tokens: ['Lack', 'of', 'exercise', 'can', 'lead', 'to', 'obesity'],
     correctAnswer: 'Lack of exercise can lead to obesity',
-    explanation: '"lead to ~"で因果関係を表します。',
+    explanation: '"lead to ~"で因果関係を表します。lack of ＋名詞で「〜の不足」。can lead to で「〜につながる可能性がある」と控えめに述べています。',
     translationJa: '運動不足は肥満につながる可能性がある。',
   },
   {
@@ -907,7 +937,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: 'The new drug showed ___ (significant) fewer side effects than the old one.',
     correctAnswer: 'significantly',
-    explanation: '比較級feweを修飾するので、副詞significantlyの形にします。',
+    explanation: '比較級 fewer を修飾するので、副詞 significantly の形にします。',
     translationJa: 'その新薬は以前のものより副作用が著しく少なかった。',
   },
   {
@@ -955,7 +985,13 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     question: 'This is the ___ common side effect reported by patients.',
     choices: ['most', 'more', 'much', 'very'],
     correctAnswer: 'most',
-    explanation: '最上級はthe mostを使います。',
+    explanation: '最上級はthe mostを使います。common のような2音節以上の形容詞は the most ＋原級で最上級にします。',
+    whyOthersWrong: [
+      '(正解)',
+      'more: 比較級なので than が必要です。',
+      'much: 比較級を強める語で、単独では最上級になりません。',
+      'very: the very common は文脈に合わず、最上級になりません。',
+    ],
     translationJa: 'これは患者から報告される最も多い副作用です。',
   },
   {
@@ -966,7 +1002,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: 'Patients in the treatment group showed ___ (great) improvement than those in the control group.',
     correctAnswer: 'greater',
-    explanation: 'greatの比較級はgreaterです。',
+    explanation: 'greatの比較級はgreaterです。those は patients の言い換えです（those in the control group）。名詞の繰り返しを避ける論文の定番の書き方です。',
     translationJa: '治療群の患者は対照群よりも大きな改善を示した。',
   },
   {
@@ -1095,7 +1131,7 @@ export const level4GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: 'The results ___ (publish) in a peer-reviewed journal.',
     correctAnswer: 'were published',
-    explanation: '受動態の過去形はwere+過去分詞です。',
+    explanation: '受動態の過去形はwere+過去分詞です。主語 results が複数なので were です。peer-reviewed は「査読付きの」で、Results や Introduction でよく見る語です。',
     translationJa: 'その結果は査読付きの学術誌に掲載された。',
   },
   {

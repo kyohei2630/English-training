@@ -93,7 +93,7 @@ export const toeicPart6Questions: ToeicPart6Question[] = [
       { choices: ['increase', 'increases', 'increased', 'increasing'], correctIndex: 2 },
       { choices: ['attribute', 'attributed', 'attributing', 'attributes'], correctIndex: 1 },
       { choices: ['expect', 'expects', 'expected', 'expecting'], correctIndex: 0 },
-      { choices: ['continue', 'continued', 'continuing', 'continuous'], correctIndex: 3 },
+      { choices: ['continue', 'continued', 'continues', 'continuation'], correctIndex: 1 },
     ],
   },
   {
@@ -111,7 +111,7 @@ export const toeicPart6Questions: ToeicPart6Question[] = [
     blanks: [
       { choices: ['launch', 'launching', 'launches', 'launched'], correctIndex: 0 },
       { choices: ['include', 'includes', 'including', 'included'], correctIndex: 0 },
-      { choices: ['participate', 'participating', 'participation', 'participated'], correctIndex: 2 },
+      { choices: ['participate', 'participates', 'participation', 'participated'], correctIndex: 2 },
       { choices: ['improve', 'improves', 'improving', 'improved'], correctIndex: 0 },
     ],
   },
@@ -129,7 +129,7 @@ export const toeicPart6Questions: ToeicPart6Question[] = [
     explanation: '請求書の支払期限に関するリマインダーです。',
     blanks: [
       { choices: ['is', 'was', 'are', 'were'], correctIndex: 0 },
-      { choices: ['apply', 'applies', 'be applied', 'applying'], correctIndex: 2 },
+      { choices: ['apply', 'applies', 'applied', 'applying'], correctIndex: 0 },
       { choices: ['send', 'sent', 'sending', 'sends'], correctIndex: 1 },
       { choices: ['contact', 'contacts', 'contacting', 'contacted'], correctIndex: 0 },
     ],
@@ -168,7 +168,7 @@ export const toeicPart6Questions: ToeicPart6Question[] = [
     blanks: [
       { choices: ['close', 'closed', 'closing', 'closes'], correctIndex: 1 },
       { choices: ['instead', 'instead of', 'whereas', 'despite'], correctIndex: 0 },
-      { choices: ['may', 'will', 'would', 'must'], correctIndex: 0 },
+      { choices: ['may', 'is', 'are', 'been'], correctIndex: 0 },
       { choices: ['immediate', 'immediately', 'immediacy', 'immediateness'], correctIndex: 1 },
     ],
   },
@@ -185,10 +185,10 @@ export const toeicPart6Questions: ToeicPart6Question[] = [
     ],
     explanation: '必須のコンプライアンス研修についてのリマインダーです。',
     blanks: [
-      { choices: ['take', 'takes', 'taking', 'took'], correctIndex: 0 },
+      { choices: ['take', 'takes', 'taking', 'took'], correctIndex: 1 },
       { choices: ['require', 'requires', 'required', 'requiring'], correctIndex: 2 },
       { choices: ['last', 'lasts', 'lasting', 'lasted'], correctIndex: 0 },
-      { choices: ['some', 'several', 'any', 'an'], correctIndex: 1 },
+      { choices: ['much', 'several', 'any', 'an'], correctIndex: 1 },
     ],
   },
   {

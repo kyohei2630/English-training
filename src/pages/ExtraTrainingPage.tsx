@@ -16,6 +16,8 @@ import { loadAllToeicParts } from '../data/toeic/loader';
 import { flattenToeicQuestions, type FlatToeicItem } from '../services/toeicService';
 import { CONTENT_STATS } from '../data/contentStats.generated';
 import { LEVELS } from '../data/levels';
+import { canonicalTag, tagLabel } from '../data/grammar/tagLabels';
+import { isRetiredQuestion } from '../data/grammar/duplicates';
 import type { GrammarLesson, GrammarQuestion, GrammarTheory, Level, ReviewCategory, UnderstandingQuestion, VocabularyEntry, WritingExercise } from '../types';
 
 type Mode = 'menu' | 'grammar-level' | 'grammar-quiz' | 'vocabulary-quiz' | 'reading-quiz' | 'writing-quiz' | 'toeic-quiz';
@@ -58,8 +60,9 @@ export default function ExtraTrainingPage() {
       loadGrammarLevel(targetLevel),
       loadGrammarTheoryLevel(targetLevel),
     ]);
-    const filteredQuestions = tag ? questions.filter((q) => q.tag === tag) : questions;
-    const filteredTheory = tag ? theoryPool.filter((t) => t.tag === tag) : theoryPool;
+    const current = questions.filter((q) => !isRetiredQuestion(q.id));
+    const filteredQuestions = tag ? current.filter((q) => canonicalTag(q.tag) === canonicalTag(tag)) : current;
+    const filteredTheory = tag ? theoryPool.filter((t) => canonicalTag(t.tag) === canonicalTag(tag)) : theoryPool;
     const tagsCoveredByTheory = new Set(filteredTheory.map((t) => t.tag));
     const usedLessonIds = new Set(
       filteredQuestions.filter((q) => !tagsCoveredByTheory.has(q.tag)).map((q) => q.lessonId)
@@ -96,7 +99,7 @@ export default function ExtraTrainingPage() {
   const startWriting = async (targetLevel: Level, tag: string) => {
     setLoadingQuestions(true);
     const pool = await loadWritingLevel(targetLevel);
-    const filtered = pool.filter((w) => w.tag === tag);
+    const filtered = pool.filter((w) => w.tag !== undefined && canonicalTag(w.tag) === canonicalTag(tag));
     setWritingExercises(filtered);
     setLoadingQuestions(false);
     setMode('writing-quiz');
@@ -153,7 +156,7 @@ export default function ExtraTrainingPage() {
   const filterBanner = activeFilter && (
     <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
       <p className="text-sm text-amber-800 dark:text-amber-300">
-        弱点克服: <span className="font-bold">{CATEGORY_LABELS_JA[activeFilter.category]}</span> ・ {activeFilter.tag} に絞り込み中
+        弱点克服: <span className="font-bold">{CATEGORY_LABELS_JA[activeFilter.category]}</span> ・ {tagLabel(activeFilter.tag)} に絞り込み中
       </p>
     </Card>
   );

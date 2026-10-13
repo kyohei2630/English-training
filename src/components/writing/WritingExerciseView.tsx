@@ -3,6 +3,8 @@ import ReorderExerciseView from './ReorderExerciseView';
 import FillBlankExerciseView from './FillBlankExerciseView';
 import OpenEndedExerciseView from './OpenEndedExerciseView';
 import { recordWritingAnswer } from '../../services/reviewService';
+import { markForSelfCheck } from '../../services/selfCheckService';
+import type { SelfCheckStatus } from '../../types';
 
 const TYPE_LABELS: Record<WritingExercise['type'], string> = {
   reorder: '並び替え',
@@ -13,13 +15,32 @@ const TYPE_LABELS: Record<WritingExercise['type'], string> = {
 
 interface WritingExerciseViewProps {
   exercise: WritingExercise;
-  onDone: (wasCorrect: boolean) => void;
+  onDone: (wasCorrect: boolean, grading?: 'auto' | 'self') => void;
+}
+
+function modelAnswer(exercise: WritingExercise): string {
+  if (exercise.type === 'reorder') return exercise.correctOrder.join(' ');
+  if (exercise.type === 'fillblank') return exercise.sentence.replace('___', exercise.answers[0]);
+  return exercise.sampleAnswers[0];
 }
 
 export default function WritingExerciseView({ exercise, onDone }: WritingExerciseViewProps) {
-  const handleResult = async (wasCorrect: boolean, userAnswerText: string) => {
-    await recordWritingAnswer(exercise, wasCorrect, userAnswerText);
-    onDone(wasCorrect);
+  const handleResult = async (status: SelfCheckStatus, userAnswerText: string, grading: 'auto' | 'self') => {
+    if (status === 'unsure') {
+      // Neither right nor wrong: kept for re-checking in tomorrow's review.
+      await markForSelfCheck({
+        category: 'writing',
+        refId: exercise.id,
+        promptText: exercise.instructionJa,
+        answerText: modelAnswer(exercise),
+        tag: exercise.tag,
+        level: exercise.level,
+        userAnswer: userAnswerText,
+      });
+    } else {
+      await recordWritingAnswer(exercise, status === 'correct', userAnswerText, grading);
+    }
+    onDone(status === 'correct', grading);
   };
 
   return (

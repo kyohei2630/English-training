@@ -6,10 +6,10 @@ import VocabularyQuizSession from '../components/vocabulary/VocabularyQuizSessio
 import { loadVocabularyLevel, loadAllVocabulary } from '../data/vocabulary/loader';
 import { LEVELS } from '../data/levels';
 import { getReviewItemsByCategory } from '../db/repositories/reviewRepository';
-import { computeMasteryTier, MASTERY_LABELS_JA, type MasteryTier } from '../services/masteryService';
+import { STUDY_STATUS_LABELS, studyStatus, type StudyStatus } from '../services/masteryService';
 import type { Level, ReviewItem, VocabularyEntry } from '../types';
 
-type MasteryFilter = 'all' | MasteryTier;
+type MasteryFilter = 'all' | StudyStatus;
 
 export default function VocabularyPage() {
   const [level, setLevel] = useState<Level>(1);
@@ -71,10 +71,7 @@ export default function VocabularyPage() {
     };
   }, [query]);
 
-  const tierOf = (entry: VocabularyEntry): MasteryTier => {
-    const item = masteryByWordId.get(entry.id);
-    return item ? computeMasteryTier(item) : 'unlearned';
-  };
+  const tierOf = (entry: VocabularyEntry): StudyStatus => studyStatus(masteryByWordId.get(entry.id));
 
   const baseList = searchResults ?? entries;
   const displayList = masteryFilter === 'all' ? baseList : baseList.filter((e) => tierOf(e) === masteryFilter);
@@ -105,10 +102,10 @@ export default function VocabularyPage() {
     );
   }
 
-  const masteredCount = entries.filter((e) => {
-    const t = tierOf(e);
-    return t === 'acquired' || t === 'retained';
-  }).length;
+  const statusCounts = entries.reduce(
+    (m, e) => ({ ...m, [tierOf(e)]: m[tierOf(e)] + 1 }),
+    { unlearned: 0, studied: 0, verified: 0, recheck: 0 } as Record<StudyStatus, number>
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -141,7 +138,7 @@ export default function VocabularyPage() {
       )}
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {(['all', 'unlearned', 'learning', 'acquired', 'retained'] as MasteryFilter[]).map((f) => (
+        {(['all', 'studied', 'verified', 'recheck', 'unlearned'] as MasteryFilter[]).map((f) => (
           <button
             key={f}
             onClick={() => setMasteryFilter(f)}
@@ -151,7 +148,7 @@ export default function VocabularyPage() {
                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
             }`}
           >
-            {f === 'all' ? 'すべて' : MASTERY_LABELS_JA[f]}
+            {f === 'all' ? 'すべて' : STUDY_STATUS_LABELS[f]}
           </button>
         ))}
       </div>
@@ -159,7 +156,10 @@ export default function VocabularyPage() {
       {!searchResults && (
         <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40">
           <p className="mb-1 text-sm text-blue-800 dark:text-blue-300">
-            Level {level} の単語: {entries.length} 語（習得 {masteredCount} 語）
+            Level {level} の単語: {entries.length} 語（学習済み {statusCounts.studied + statusCounts.verified + statusCounts.recheck} 語・うち定着確認済み {statusCounts.verified} 語・再確認が必要 {statusCounts.recheck} 語）
+          </p>
+          <p className="mb-1 text-xs text-blue-700 dark:text-blue-400">
+            定着確認済み＝1週間以上あけて正解した単語。以前の学習記録はすべて「学習済み」として残ります。
           </p>
           <p className="mb-3 text-xs text-blue-700 dark:text-blue-400">英→日・日→英・文脈問題・類義語などをランダムに出題します。</p>
           <Button size="lg" className="w-full" onClick={() => setQuizzing(true)} disabled={entries.length === 0}>
@@ -184,7 +184,22 @@ export default function VocabularyPage() {
                 <span className="ml-2 text-xs text-slate-400">{entry.partOfSpeech}</span>
                 {searchResults && <span className="ml-2 text-xs text-slate-400">L{entry.level}</span>}
               </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">{entry.meaningJa}</span>
+              <span className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                {entry.meaningJa}
+                {tierOf(entry) !== 'unlearned' && (
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      tierOf(entry) === 'verified'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300'
+                        : tierOf(entry) === 'recheck'
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    }`}
+                  >
+                    {STUDY_STATUS_LABELS[tierOf(entry)]}
+                  </span>
+                )}
+              </span>
             </button>
           ))}
         </div>

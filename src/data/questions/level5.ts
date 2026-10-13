@@ -23,7 +23,7 @@ export const level5Questions: UnderstandingQuestion[] = [
     question: 'What limits traditional ECG monitoring, according to the passage?',
     choices: ['It is too expensive', 'It requires a clinic visit', 'It is inaccurate', 'It takes too long to set up'],
     correctIndex: 1,
-    explanation: '"Traditional ECG monitoring ... typically requires patients to visit a clinic, which limits the amount of continuous data" とあります。',
+    explanation: '"Traditional electrocardiogram (ECG) monitoring, however, typically requires patients to visit a clinic, which limits the amount of continuous data" とあります。',
   },
   {
     id: 'q-l5-002-2',
@@ -270,7 +270,7 @@ export const level5Questions: UnderstandingQuestion[] = [
     question: 'What does "vague" most likely mean in this passage?',
     choices: ['Precise and specific', 'Unclear or imprecise', 'Very long', 'Grammatically incorrect'],
     correctIndex: 1,
-    explanation: '"instead of vague statements" の文脈から、「曖昧な」という意味だと推測できます。',
+    explanation: '"rather than vague statements" の文脈から、「曖昧な」という意味だと推測できます。',
     skillTag: 'vocabulary-in-context',
   },
   {

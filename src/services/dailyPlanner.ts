@@ -8,35 +8,20 @@ export interface DynamicMinutePlan {
   totalMinutes: number;
 }
 
-const TOTAL_MINUTES = 30;
-const FLOOR_MINUTES = 4;
-const REVIEW_HEAVY_THRESHOLD = 10;
-
 /**
- * Rebalances the day's ~30 minute budget when there are a lot of overdue review items.
- * Priority order for "what to study today" is: overdue review > previously-wrong items
- * (both surface naturally through the spaced-repetition queue, which resurfaces wrong
- * answers sooner) > today's new material. This function only handles the time-budget
- * side of that priority: Review gets more minutes, Reading/Grammar/Writing get
- * proportionally less (never below a readable floor).
+ * The standard ~25 minute day: review 5 / new knowledge + practice (Grammar) 10 / applied
+ * practice (Reading 5 + Writing 5) 10. When the review backlog is high and not shrinking, review
+ * gets more time (up to 10 questions) and new grammar a little less (6 -> 4 questions) — new
+ * learning continues, the total stays the same.
  */
-export function computeDynamicMinutes(dueReviewCount: number): DynamicMinutePlan {
-  if (dueReviewCount <= REVIEW_HEAVY_THRESHOLD) {
-    return { ...TARGET_MINUTES, totalMinutes: TOTAL_MINUTES };
+export function computeDailyMinutes(loadHigh: boolean): DynamicMinutePlan {
+  if (!loadHigh) {
+    const total = TARGET_MINUTES.reading + TARGET_MINUTES.grammar + TARGET_MINUTES.writing + TARGET_MINUTES.review;
+    return { ...TARGET_MINUTES, totalMinutes: total };
   }
-
-  const extraDue = dueReviewCount - REVIEW_HEAVY_THRESHOLD;
-  const reviewBoost = Math.min(12, Math.floor(extraDue / 5) * 2);
-  const maxReviewMinutes = TOTAL_MINUTES - FLOOR_MINUTES * 3;
-  const review = Math.min(maxReviewMinutes, TARGET_MINUTES.review + reviewBoost);
-
-  const remaining = TOTAL_MINUTES - review;
-  const otherBaseTotal = TARGET_MINUTES.reading + TARGET_MINUTES.grammar + TARGET_MINUTES.writing;
-  const scale = remaining / otherBaseTotal;
-
-  const reading = Math.max(FLOOR_MINUTES, Math.round(TARGET_MINUTES.reading * scale));
-  const grammar = Math.max(FLOOR_MINUTES, Math.round(TARGET_MINUTES.grammar * scale));
-  const writing = Math.max(FLOOR_MINUTES, Math.round(TARGET_MINUTES.writing * scale));
-
-  return { reading, grammar, writing, review, totalMinutes: reading + grammar + writing + review };
+  const plan = { reading: 5, grammar: 8, writing: 4, review: 8 };
+  return { ...plan, totalMinutes: plan.reading + plan.grammar + plan.writing + plan.review };
 }
+
+/** Minutes of the busy-day mode: a few review questions and one sentence of your own. */
+export const QUICK_MODE_MINUTES = 5;

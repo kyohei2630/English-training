@@ -4,6 +4,8 @@ import { loadReadingLevel } from '../data/reading/loader';
 import { loadWritingLevel } from '../data/writing/loader';
 import { loadGrammarLevel } from '../data/grammar/loader';
 import { loadGrammarTheoryLevel } from '../data/grammar/theory/loader';
+import { theoryTagFor } from '../data/grammar/theory/tagAliases';
+import { isRetiredQuestion } from '../data/grammar/duplicates';
 
 interface LevelRange {
   level: Level;
@@ -82,7 +84,8 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
   if (grammarPool.length > 0) {
     for (let i = 0; i < GRAMMAR_PER_DAY; i++) {
       const idx = (indexInLevel * GRAMMAR_PER_DAY + i) % grammarPool.length;
-      grammarQuestions.push(grammarPool[idx]);
+      // A retired duplicate is skipped, not replaced, so every other day keeps its questions.
+      if (!isRetiredQuestion(grammarPool[idx].id)) grammarQuestions.push(grammarPool[idx]);
     }
   }
 
@@ -99,9 +102,9 @@ export async function getDailyPlan(day: number): Promise<DailyPlan> {
   const grammarTheory: GrammarTheory[] = [];
   const tagsCoveredByTheory = new Set<string>();
   for (const tag of todaysTags) {
-    const theory = theoryByTag.get(tag);
+    const theory = theoryByTag.get(theoryTagFor(level, tag));
     if (theory) {
-      grammarTheory.push(theory);
+      if (!grammarTheory.includes(theory)) grammarTheory.push(theory);
       tagsCoveredByTheory.add(tag);
     }
   }

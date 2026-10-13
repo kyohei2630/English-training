@@ -949,9 +949,9 @@ export const level1Questions: UnderstandingQuestion[] = [
     id: 'q-l1-024-4',
     materialId: 'l1-024',
     question: 'Why did she add more water?',
-    choices: ['It was too salty', 'It was too spicy', 'It was too thick', 'It was too cold'],
+    choices: ['It was too salty', 'The taste was too strong', 'It was too thick', 'It was too cold'],
     correctIndex: 1,
-    explanation: '"I added more water because the taste was too strong." とあります。',
+    explanation: '"I added more water because the taste was too strong." とあります。taste was too strong（味が濃すぎた）とあり、辛い・しょっぱいなど具体的な味は書かれていません。',
   },
   {
     id: 'q-l1-024-5',

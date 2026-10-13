@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import type { GrammarQuestion } from '../../types';
 import Button from '../common/Button';
 import Card from '../common/Card';
-import { isFillBlankCorrect, normalize } from '../../services/writingEvaluator';
 import { shuffle } from '../../utils/random';
 import { recordAnswer } from '../../services/reviewService';
+import { isSentenceCorrect } from '../../services/sentenceBuildingService';
+import { buildSelfCheck, markForSelfCheck } from '../../services/selfCheckService';
+import SelfCheckPanel from '../writing/SelfCheckPanel';
+import type { SelfCheckStatus } from '../../types';
 
 const FORMAT_LABELS: Record<GrammarQuestion['format'], string> = {
   choice4: '4択',
@@ -19,10 +22,11 @@ const FORMAT_LABELS: Record<GrammarQuestion['format'], string> = {
 
 interface GrammarQuestionViewProps {
   question: GrammarQuestion;
-  onDone: (wasCorrect: boolean) => void;
+  /** grading: 'self' when the learner judged a typed answer (it then stays out of objective accuracy) */
+  onDone: (wasCorrect: boolean, grading?: 'auto' | 'self') => void;
 }
 
-async function record(question: GrammarQuestion, wasCorrect: boolean) {
+async function record(question: GrammarQuestion, wasCorrect: boolean, grading: 'auto' | 'self' = 'auto') {
   await recordAnswer({
     category: 'grammar',
     refId: question.id,
@@ -32,7 +36,61 @@ async function record(question: GrammarQuestion, wasCorrect: boolean) {
     tag: question.tag,
     level: question.level,
     wasCorrect,
+    skill: question.format === 'structure' ? 'structure' : question.level === 5 ? 'research' : undefined,
+    grading,
   });
+}
+
+/** A typed answer that matched no registered answer, decided by the learner. */
+async function recordSelfChecked(question: GrammarQuestion, status: SelfCheckStatus, userAnswer: string) {
+  if (status === 'unsure') {
+    await markForSelfCheck({
+      category: 'grammar',
+      refId: question.id,
+      promptText: question.question,
+      answerText: question.correctAnswer,
+      explanation: question.explanation,
+      tag: question.tag,
+      level: question.level,
+      userAnswer,
+    });
+  } else {
+    await record(question, status === 'correct', 'self');
+  }
+}
+
+function GrammarSelfCheck({
+  question,
+  userAnswer,
+  onDone,
+}: {
+  question: GrammarQuestion;
+  userAnswer: string;
+  onDone: (ok: boolean, grading: 'self') => void;
+}) {
+  const [decision, setDecision] = useState<SelfCheckStatus | null>(null);
+  return (
+    <>
+      <div className="mt-4">
+        <SelfCheckPanel
+          userAnswer={userAnswer}
+          answers={[question.correctAnswer]}
+          info={buildSelfCheck(userAnswer, [question.correctAnswer], { tag: question.tag })}
+          translationJa={question.translationJa}
+          onDecide={async (s) => {
+            setDecision(s);
+            await recordSelfChecked(question, s, userAnswer);
+          }}
+        />
+        <p className="mt-3 whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">{question.explanation}</p>
+      </div>
+      {decision && (
+        <Button size="lg" className="mt-4 w-full" onClick={() => onDone(decision === 'correct', 'self')}>
+          次へ
+        </Button>
+      )}
+    </>
+  );
 }
 
 function FeedbackPanel({ wasCorrect, question }: { wasCorrect: boolean; question: GrammarQuestion }) {
@@ -109,9 +167,10 @@ function TextQuestion({ question, onDone }: GrammarQuestionViewProps) {
   const [checked, setChecked] = useState<boolean | null>(null);
 
   const handleCheck = async () => {
-    const correct = isFillBlankCorrect(answer, [question.correctAnswer]);
+    // Contraction-aware (don't = do not). A non-matching answer goes to self-check, not 不正解.
+    const correct = isSentenceCorrect(answer, [question.correctAnswer]);
     setChecked(correct);
-    await record(question, correct);
+    if (correct) await record(question, true);
   };
 
   return (
@@ -122,19 +181,24 @@ function TextQuestion({ question, onDone }: GrammarQuestionViewProps) {
         onChange={(e) => setAnswer(e.target.value)}
         disabled={checked !== null}
         placeholder="英語で入力"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
         className="w-full rounded-lg border-2 border-blue-300 bg-blue-50 px-3 py-2 text-base disabled:opacity-70 dark:bg-blue-950/40"
       />
       {checked === null ? (
         <Button className="mt-4" onClick={handleCheck} disabled={answer.trim() === ''}>
           答え合わせ
         </Button>
-      ) : (
+      ) : checked ? (
         <>
-          <FeedbackPanel wasCorrect={checked} question={question} />
-          <Button size="lg" className="mt-4 w-full" onClick={() => onDone(checked)}>
+          <FeedbackPanel wasCorrect question={question} />
+          <Button size="lg" className="mt-4 w-full" onClick={() => onDone(true)}>
             次へ
           </Button>
         </>
+      ) : (
+        <GrammarSelfCheck question={question} userAnswer={answer} onDone={onDone} />
       )}
     </>
   );
@@ -160,9 +224,9 @@ function ReorderQuestion({ question, onDone }: GrammarQuestionViewProps) {
   };
 
   const handleCheck = async () => {
-    const correct = normalize(chosen.join(' ')) === normalize(question.correctAnswer);
+    const correct = isSentenceCorrect(chosen.join(' '), [question.correctAnswer]);
     setChecked(correct);
-    await record(question, correct);
+    if (correct) await record(question, true);
   };
 
   return (
@@ -194,13 +258,15 @@ function ReorderQuestion({ question, onDone }: GrammarQuestionViewProps) {
         <Button className="mt-4 w-full" onClick={handleCheck} disabled={available.length > 0}>
           答え合わせ
         </Button>
-      ) : (
+      ) : checked ? (
         <>
-          <FeedbackPanel wasCorrect={checked} question={question} />
-          <Button size="lg" className="mt-4 w-full" onClick={() => onDone(checked)}>
+          <FeedbackPanel wasCorrect question={question} />
+          <Button size="lg" className="mt-4 w-full" onClick={() => onDone(true)}>
             次へ
           </Button>
         </>
+      ) : (
+        <GrammarSelfCheck question={question} userAnswer={chosen.join(' ')} onDone={onDone} />
       )}
     </>
   );

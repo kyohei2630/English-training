@@ -1,21 +1,27 @@
 import { useState } from 'react';
-import type { FillBlankExercise } from '../../types';
+import type { FillBlankExercise, SelfCheckStatus } from '../../types';
 import Button from '../common/Button';
-import { isFillBlankCorrect } from '../../services/writingEvaluator';
+import SelfCheckPanel from './SelfCheckPanel';
+import { isSentenceCorrect } from '../../services/sentenceBuildingService';
+import { buildSelfCheck } from '../../services/selfCheckService';
 
 interface FillBlankExerciseViewProps {
   exercise: FillBlankExercise;
-  onResult: (wasCorrect: boolean, userAnswerText: string) => void;
+  onResult: (status: SelfCheckStatus, userAnswerText: string, grading: 'auto' | 'self') => void;
 }
 
 export default function FillBlankExerciseView({ exercise, onResult }: FillBlankExerciseViewProps) {
   const [answer, setAnswer] = useState('');
-  const [checked, setChecked] = useState<boolean | null>(null);
+  const [checked, setChecked] = useState<'exact' | 'self-check' | null>(null);
+  const [decision, setDecision] = useState<SelfCheckStatus | null>(null);
 
   const parts = exercise.sentence.split('___');
+  const fill = (word: string) => `${parts[0]}${word}${parts[1] ?? ''}`;
+  const modelSentences = exercise.answers.map(fill);
 
   const handleCheck = () => {
-    setChecked(isFillBlankCorrect(answer, exercise.answers));
+    // Compared as whole sentences, so contractions and spacing don't matter (don't = do not).
+    setChecked(isSentenceCorrect(fill(answer), modelSentences) ? 'exact' : 'self-check');
   };
 
   return (
@@ -28,26 +34,48 @@ export default function FillBlankExerciseView({ exercise, onResult }: FillBlankE
           onChange={(e) => setAnswer(e.target.value)}
           disabled={checked !== null}
           placeholder="___"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           className="mx-1 w-28 rounded-lg border-b-2 border-blue-400 bg-blue-50 px-2 py-1 text-center font-medium disabled:opacity-70 dark:bg-blue-950/40"
         />
         {parts[1]}
       </p>
       {exercise.hint && <p className="text-xs text-slate-400">ヒント: {exercise.hint}</p>}
 
-      {checked === null ? (
+      {checked === null && (
         <Button onClick={handleCheck} disabled={answer.trim() === ''}>
           答え合わせ
         </Button>
-      ) : (
+      )}
+
+      {checked === 'exact' && (
         <>
-          <div className={`rounded-xl p-4 text-sm ${checked ? 'bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300' : 'bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300'}`}>
-            <p className="mb-1 font-bold">{checked ? '正解！' : '不正解'}</p>
+          <div className="rounded-xl bg-green-50 p-4 text-sm text-green-800 dark:bg-green-950/40 dark:text-green-300">
+            <p className="mb-1 font-bold">正解！（自動判定）</p>
             <p>正解: {exercise.answers.join(' / ')}</p>
             <p className="mt-1 text-slate-500 dark:text-slate-400">{exercise.translationJa}</p>
           </div>
-          <Button size="lg" onClick={() => onResult(!!checked, answer)}>
+          <Button size="lg" onClick={() => onResult('correct', answer, 'auto')}>
             次へ
           </Button>
+        </>
+      )}
+
+      {checked === 'self-check' && (
+        <>
+          <SelfCheckPanel
+            userAnswer={fill(answer)}
+            answers={modelSentences}
+            info={buildSelfCheck(fill(answer), modelSentences, { tag: exercise.tag, hintJa: exercise.hint })}
+            translationJa={exercise.translationJa}
+            onDecide={setDecision}
+          />
+          {decision && (
+            <Button size="lg" onClick={() => onResult(decision, answer, 'self')}>
+              次へ
+            </Button>
+          )}
         </>
       )}
     </div>

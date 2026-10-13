@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import { DB_NAME, DB_VERSION, type AppDBSchema } from './types';
+import { canonicalTag } from '../data/grammar/tagLabels';
 
 let dbPromise: Promise<IDBPDatabase<AppDBSchema>> | null = null;
 
@@ -49,6 +50,37 @@ export function getDB(): Promise<IDBPDatabase<AppDBSchema>> {
           if (!db.objectStoreNames.contains('theoryProgress')) {
             db.createObjectStore('theoryProgress', { keyPath: 'id' });
           }
+        }
+
+        // --- v4: answerLog + assessments stores ---
+        // New stores only; existing records are untouched.
+        if (oldVersion < 4) {
+          if (!db.objectStoreNames.contains('answerLog')) {
+            db.createObjectStore('answerLog', { keyPath: 'id' }).createIndex('by-date', 'date');
+          }
+          if (!db.objectStoreNames.contains('assessments')) {
+            db.createObjectStore('assessments', { keyPath: 'id' }).createIndex('by-date', 'date');
+          }
+        }
+
+        // --- v5: assessmentDrafts store + grammar tag IDs ---
+        // Records saved with an old spelling of a tag (e.g. "There is/are") get the tag's
+        // internal ID ("there-is-are"), so they group with newer answers. Only `tag` changes.
+        if (oldVersion < 5) {
+          if (!db.objectStoreNames.contains('assessmentDrafts')) {
+            db.createObjectStore('assessmentDrafts', { keyPath: 'id' });
+          }
+          const migrateTags = async (storeName: 'reviewItems' | 'answerLog') => {
+            let cursor = await tx.objectStore(storeName).openCursor();
+            while (cursor) {
+              const value = cursor.value;
+              const tag = canonicalTag(value.tag);
+              if (tag !== value.tag) await cursor.update({ ...value, tag });
+              cursor = await cursor.continue();
+            }
+          };
+          void migrateTags('reviewItems');
+          void migrateTags('answerLog');
         }
       },
     });

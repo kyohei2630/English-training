@@ -6,6 +6,7 @@ import MiniCheckView from './MiniCheckView';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { markTheoryViewed, recordMiniCheckResult } from '../../services/theoryService';
+import { tagLabel } from '../../data/grammar/tagLabels';
 
 interface GrammarSessionProps {
   /** rich Theory entries for today's tags (Theory -> Mini Check -> Practice). */
@@ -14,6 +15,7 @@ interface GrammarSessionProps {
    * Pass an empty array to skip straight past this phase. */
   lessons: GrammarLesson[];
   questions: GrammarQuestion[];
+  /** counts of app-checked answers only; self-checked typed answers are left out of both */
   onComplete: (correctCount: number, totalCount: number) => void;
 }
 
@@ -21,7 +23,7 @@ function LessonCard({ lesson }: { lesson: GrammarLesson }) {
   return (
     <Card>
       <span className="mb-2 inline-block w-fit rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-        {lesson.tag}
+        {tagLabel(lesson.tag)}
       </span>
       <h3 className="mb-2 text-lg font-bold">{lesson.title}</h3>
       <p className="mb-3 whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">{lesson.explanationJa}</p>
@@ -51,6 +53,7 @@ export default function GrammarSession({ theory, lessons, questions, onComplete 
   const [phase, setPhase] = useState<Phase>(() => firstPhase(theory, lessons));
   const [index, setIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [selfGradedCount, setSelfGradedCount] = useState(0);
   const allMiniCheckItems = useMemo(() => theory.flatMap((t) => t.miniCheck.map((item) => ({ item, theoryId: t.id }))), [theory]);
 
   if (questions.length === 0) {
@@ -113,12 +116,15 @@ export default function GrammarSession({ theory, lessons, questions, onComplete 
     );
   }
 
-  const handleDone = (wasCorrect: boolean) => {
-    const nextCorrect = wasCorrect ? correctCount + 1 : correctCount;
+  const handleDone = (wasCorrect: boolean, grading: 'auto' | 'self' = 'auto') => {
+    const self = grading === 'self';
+    const nextCorrect = wasCorrect && !self ? correctCount + 1 : correctCount;
+    const nextSelf = selfGradedCount + (self ? 1 : 0);
     if (index === questions.length - 1) {
-      onComplete(nextCorrect, questions.length);
+      onComplete(nextCorrect, questions.length - nextSelf);
     } else {
       setCorrectCount(nextCorrect);
+      setSelfGradedCount(nextSelf);
       setIndex((i) => i + 1);
     }
   };

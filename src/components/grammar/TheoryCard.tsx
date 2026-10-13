@@ -1,4 +1,5 @@
 import type { GrammarTerm, GrammarTheory } from '../../types';
+import { tagLabel } from '../../data/grammar/tagLabels';
 import Card from '../common/Card';
 import SentenceStructureView from '../reading/SentenceStructureView';
 
@@ -18,7 +19,7 @@ export default function TheoryCard({ theory, terms = [], onTermClick }: TheoryCa
     <Card className="flex flex-col gap-4">
       <div>
         <span className="mb-2 inline-block w-fit rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-          {theory.tag}
+          {tagLabel(theory.tag)}
         </span>
         <h2 className="text-xl font-bold">{theory.title}</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{theory.shortDescription}</p>

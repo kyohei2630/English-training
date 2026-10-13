@@ -8,19 +8,31 @@ import {
   replaceAllToeicResults,
 } from '../db/repositories/toeicResultRepository';
 import { getAllTheoryProgress, replaceAllTheoryProgress } from '../db/repositories/theoryProgressRepository';
+import { getAllAnswerLog, replaceAllAnswerLog } from '../db/repositories/answerLogRepository';
+import {
+  deleteAssessmentDraft,
+  getAllAssessments,
+  getAssessmentDraft,
+  replaceAllAssessments,
+  saveAssessmentDraft,
+} from '../db/repositories/assessmentRepository';
+import { canonicalTag } from '../data/grammar/tagLabels';
 import { DEFAULT_PROGRESS } from '../db/repositories/progressRepository';
 import { DEFAULT_SETTINGS } from '../db/repositories/settingsRepository';
 
-const EXPORT_VERSION = 3;
+const EXPORT_VERSION = 5;
 
 export async function buildExportBundle(): Promise<ExportBundle> {
-  const [sessions, reviewItems, progress, settings, toeicResults, theoryProgress] = await Promise.all([
+  const [sessions, reviewItems, progress, settings, toeicResults, theoryProgress, answerLog, assessments, assessmentDraft] = await Promise.all([
     getAllSessions(),
     getAllReviewItems(),
     getProgress(),
     getSettings(),
     getAllToeicResults(),
     getAllTheoryProgress(),
+    getAllAnswerLog(),
+    getAllAssessments(),
+    getAssessmentDraft(),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -31,6 +43,9 @@ export async function buildExportBundle(): Promise<ExportBundle> {
     settings,
     toeicResults,
     theoryProgress,
+    answerLog,
+    assessments,
+    assessmentDraft: assessmentDraft ?? null,
   };
 }
 
@@ -76,13 +91,21 @@ export async function importExportBundle(raw: string): Promise<void> {
   const settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
   const toeicResults = Array.isArray(parsed.toeicResults) ? parsed.toeicResults : [];
   const theoryProgress = Array.isArray(parsed.theoryProgress) ? parsed.theoryProgress : [];
+  // v1-v3 backups predate the answer log and assessments.
+  const answerLog = (Array.isArray(parsed.answerLog) ? parsed.answerLog : []).map((e) => ({ ...e, tag: canonicalTag(e.tag) }));
+  // Old spellings of grammar tags become their internal ID, as in the DB v5 upgrade.
+  const reviewItems = parsed.reviewItems.map((i) => ({ ...i, tag: canonicalTag(i.tag) }));
+  const assessments = Array.isArray(parsed.assessments) ? parsed.assessments : [];
 
   await Promise.all([
     replaceAllSessions(parsed.sessions),
-    replaceAllReviewItems(parsed.reviewItems),
+    replaceAllReviewItems(reviewItems),
     saveProgress(progress),
     saveSettings(settings),
     replaceAllToeicResults(toeicResults),
     replaceAllTheoryProgress(theoryProgress),
+    replaceAllAnswerLog(answerLog),
+    replaceAllAssessments(assessments),
+    parsed.assessmentDraft ? saveAssessmentDraft(parsed.assessmentDraft) : deleteAssessmentDraft(),
   ]);
 }

@@ -603,10 +603,16 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     level: 2,
     format: 'choice4',
     tag: '現在完了',
-    question: 'Have you ___ finished the report?',
-    choices: ['yet', 'already', 'ever', 'never'],
+    question: 'Have you finished the report ___?',
+    choices: ['yet', 'ago', 'still', 'ever'],
     correctAnswer: 'yet',
-    explanation: '疑問文で「もう〜しましたか」と尋ねるときはyetを使います。',
+    explanation: '疑問文で「もう〜しましたか」と尋ねるときは、文末に yet を置きます。驚きを込めて「もう終わったの？」と言うときは already も使われます。',
+    whyOthersWrong: [
+      '(正解)',
+      'ago: 「〜前に」で過去形と使い、現在完了とは使いません。',
+      'still: 「まだ」の意味で、この位置には通常置きません。',
+      'ever: 「今までに」で、経験を尋ねるときに過去分詞の前に置きます。',
+    ],
     translationJa: 'その報告書はもう終わりましたか。',
   },
   {
@@ -638,10 +644,16 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     level: 2,
     format: 'choice4',
     tag: '現在完了',
-    question: 'They ___ moved to a new office last week, so it isn\'t "recently completed" anymore.',
-    choices: ['have', 'has', 'had', 'moved'],
+    question: 'They ___ to a new office last week.',
+    choices: ['have moved', 'has moved', 'had moved', 'moved'],
     correctAnswer: 'moved',
-    explanation: '"last week"は過去の特定時点を表すので、現在完了ではなく単純な過去形movedが適切です。',
+    explanation: 'last week（先週）は過去の特定の時点を表すので、現在完了ではなく過去形 moved を使います。',
+    whyOthersWrong: [
+      'have moved: 現在完了は last week のような過去の時点とは使えません。',
+      'has moved: 主語 They にも合わず、last week とも使えません。',
+      'had moved: 過去完了は「過去のある時点より前」を表すときに使います。',
+      '(正解)',
+    ],
     translationJa: '彼らは先週新しいオフィスに引っ越しました。',
   },
   {
@@ -698,7 +710,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '不定詞',
     question: '次の文の誤りを直しなさい: "I decided studying abroad."',
     correctAnswer: 'I decided to study abroad.',
-    explanation: 'decideは不定詞を目的語にとる動詞です。',
+    explanation: 'decideは不定詞を目的語にとる動詞です。decide・want・hope・plan など「これからすること」を表す動詞は to 不定詞をとります。',
     translationJa: '私は留学することを決めました。',
   },
   {
@@ -709,7 +721,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '不定詞',
     question: '次の日本語を英語にしなさい: 「私は将来、医者になりたいです。」',
     correctAnswer: 'I want to become a doctor in the future.',
-    explanation: 'wantは不定詞を目的語にとります。',
+    explanation: 'wantは不定詞を目的語にとります。want to be a doctor でも同じ意味です。want の後は不定詞で、want becoming とはしません。',
     translationJa: '私は将来、医者になりたいです。',
   },
   {
@@ -733,7 +745,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'He was surprised ___ the news.',
     choices: ['hear', 'hearing', 'to hear', 'heard'],
     correctAnswer: 'to hear',
-    explanation: '感情の原因を表す不定詞の副詞的用法です。',
+    explanation: '感情の原因を表す不定詞の副詞的用法です。surprised・glad・sad など感情の形容詞の後の to 不定詞は「〜して（驚いた）」と感情の原因を表します。',
+    whyOthersWrong: [
+      'hear: 形容詞の直後に動詞の原形は置けません。',
+      'hearing: surprised at hearing なら可能ですが、前置詞なしでは使えません。',
+      '(正解)',
+      'heard: 過去形をここに置くことはできません。',
+    ],
     translationJa: '彼はその知らせを聞いて驚きました。',
   },
   {
@@ -746,6 +764,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['I need something to write.', 'I need something to write with.', 'I need something writing.', 'I need something for write.'],
     correctAnswer: 'I need something to write with.',
     explanation: '「書くための何か（道具）」という意味ではwithを伴う不定詞句が必要です。',
+    whyOthersWrong: [
+      'something to write: 「書く内容（手紙など）」の意味になります。',
+      '(正解)',
+      'something writing: 「書くための何か」という意味になりません。',
+      'for write: for の後に動詞の原形は置けません。',
+    ],
     translationJa: '私は何か書くもの（道具）が必要です。',
   },
   {
@@ -779,7 +803,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '不定詞',
     question: '次の日本語を英語にしなさい: 「彼はその試験に合格するために一生懸命勉強した。」',
     correctAnswer: 'He studied hard to pass the exam.',
-    explanation: '目的を表す不定詞の副詞的用法です。',
+    explanation: '目的を表す不定詞の副詞的用法です。「〜するために」は to 不定詞で表します。目的をはっきりさせたいときは in order to pass でも書けます。',
     translationJa: '彼はその試験に合格するために一生懸命勉強した。',
   },
   {
@@ -815,6 +839,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['lock', 'locking', 'to lock', 'locked'],
     correctAnswer: 'to lock',
     explanation: 'remember to doは「（これから）〜するのを忘れない」という意味です。',
+    whyOthersWrong: [
+      'lock: remembers の後に原形は置けません。',
+      'locking: remember -ing は「（過去に）〜したことを覚えている」で、出かける前に毎回することには合いません。',
+      '(正解)',
+      'locked: 過去形は目的語になりません。',
+    ],
     translationJa: '彼女は出かける前に必ずドアに鍵をかけることを覚えています。',
   },
   {
@@ -826,7 +856,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'He finished ___ his report an hour ago.',
     choices: ['write', 'to write', 'writing', 'wrote'],
     correctAnswer: 'writing',
-    explanation: 'finishは動名詞を目的語にとる動詞です。',
+    explanation: 'finishは動名詞を目的語にとる動詞です。finish・enjoy・avoid・mind・give up は動名詞（-ing）だけを目的語にとります。',
+    whyOthersWrong: [
+      'write: 動詞の後に原形を続けることはできません。',
+      'to write: finish は不定詞を目的語にとりません。',
+      '(正解)',
+      'wrote: 過去形を目的語にすることはできません。',
+    ],
     translationJa: '彼は1時間前に報告書を書き終えました。',
   },
   {
@@ -837,7 +873,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '動名詞',
     question: 'She is good at ___ (solve) math problems.',
     correctAnswer: 'solving',
-    explanation: '前置詞atの後には動名詞が続きます。',
+    explanation: '前置詞atの後には動名詞が続きます。good at, interested in, before, after などの前置詞の後に動詞を置くときは、必ず -ing 形にします（to solve は不可）。',
     translationJa: '彼女は数学の問題を解くのが得意です。',
   },
   {
@@ -860,7 +896,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '動名詞',
     question: '次の文の誤りを直しなさい: "He avoided to answer the question."',
     correctAnswer: 'He avoided answering the question.',
-    explanation: 'avoidは動名詞を目的語にとる動詞です。',
+    explanation: 'avoidは動名詞を目的語にとる動詞です。avoid は「すでにある・今している行為を避ける」ので動名詞をとります。avoid to do とはしません。',
     translationJa: '彼はその質問に答えるのを避けました。',
   },
   {
@@ -871,7 +907,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '動名詞',
     question: '次の日本語を英語にしなさい: 「私の趣味は写真を撮ることです。」',
     correctAnswer: 'My hobby is taking pictures.',
-    explanation: '動名詞は文の補語にもなれます。',
+    explanation: '動名詞は文の補語にもなれます。My hobby is to take pictures. も文法的には正しいですが、趣味のように習慣的な行為は動名詞で表すのが自然です。',
     translationJa: '私の趣味は写真を撮ることです。',
   },
   {
@@ -907,7 +943,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '正しい文を選びなさい',
     choices: ['I enjoy to read novels.', 'I enjoy reading novels.', 'I enjoy read novels.', 'I enjoy reads novels.'],
     correctAnswer: 'I enjoy reading novels.',
-    explanation: 'enjoyは動名詞を目的語にとる動詞です。',
+    explanation: 'enjoyは動名詞を目的語にとる動詞です。enjoy は動名詞だけを目的語にとります。',
+    whyOthersWrong: [
+      'enjoy to read: enjoy は不定詞をとりません。',
+      '(正解)',
+      'enjoy read: 動詞の後に原形を続けられません。',
+      'enjoy reads: 動詞を2つ並べることはできません。',
+    ],
     translationJa: '私は小説を読むのを楽しんでいます。',
   },
   {
@@ -918,7 +960,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '動名詞',
     question: '___ (smoke) is not allowed in this building.',
     correctAnswer: 'Smoking',
-    explanation: '動名詞が文の主語になっています。',
+    explanation: '動名詞が文の主語になっています。動名詞の主語は単数扱いなので、動詞は is になります。To smoke is ... も可能ですが、掲示や一般論では動名詞が自然です。',
     translationJa: 'この建物内での喫煙は許可されていません。',
   },
   {
@@ -930,7 +972,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'He gave up ___ after many failed attempts.',
     choices: ['try', 'to try', 'trying', 'tried'],
     correctAnswer: 'trying',
-    explanation: 'give upは動名詞を目的語にとる動詞句です。',
+    explanation: 'give upは動名詞を目的語にとる動詞句です。give up（やめる・あきらめる）は句動詞で、動名詞をとります。',
+    whyOthersWrong: [
+      'try: 原形は続けられません。',
+      'to try: give up は不定詞をとりません。',
+      '(正解)',
+      'tried: 過去形は目的語になりません。',
+    ],
     translationJa: '彼は何度も失敗した後、あきらめました。',
   },
   {
@@ -1068,7 +1116,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: 'She runs ___ (fast) than her brother.',
     correctAnswer: 'faster',
-    explanation: '1音節の副詞fastの比較級はfasterです。',
+    explanation: '1音節の副詞fastの比較級はfasterです。比較級は than とセットで使います。2音節以上の多くの語は more ＋原級（more quickly）になります。',
     translationJa: '彼女は兄よりも速く走ります。',
   },
   {
@@ -1080,7 +1128,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '正しい語順に並べ替えなさい',
     tokens: ['this', 'is', 'the', 'best', 'restaurant', 'in', 'town'],
     correctAnswer: 'This is the best restaurant in town.',
-    explanation: 'goodの最上級bestを使った最上級の文です。',
+    explanation: 'goodの最上級bestを使った最上級の文です。最上級には the を付け、範囲を in ＋場所・集団（in town）、of ＋複数（of the three）で表します。',
     translationJa: 'これは町で一番のレストランです。',
   },
   {
@@ -1102,7 +1150,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: '次の日本語を英語にしなさい: 「この本はあの本と同じくらい面白い。」',
     correctAnswer: 'This book is as interesting as that one.',
-    explanation: '同等比較はas 原級 asで表します。',
+    explanation: '同等比較はas 原級 asで表します。as と as の間は原級（interesting）のままです。否定 not as ... as は「…ほど〜ない」になります。that one は that book の book を繰り返さないための代名詞です。',
     translationJa: 'この本はあの本と同じくらい面白い。',
   },
   {
@@ -1126,7 +1174,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'Health is ___ important than money.',
     choices: ['more', 'most', 'much', 'very'],
     correctAnswer: 'more',
-    explanation: 'thanを伴う比較級なのでmoreが正解です。',
+    explanation: 'thanを伴う比較級なのでmoreが正解です。important のような長い形容詞は -er を付けず more important にします。',
+    whyOthersWrong: [
+      '(正解)',
+      'most: 最上級なので than とは使いません。',
+      'much: much は比較級を強める語で、much more important の形なら可。',
+      'very: very は than と一緒に使えません。',
+    ],
     translationJa: '健康はお金より重要です。',
   },
   {
@@ -1160,7 +1214,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '比較',
     question: '次の日本語を英語にしなさい: 「富士山は日本で一番高い山です。」',
     correctAnswer: 'Mt. Fuji is the highest mountain in Japan.',
-    explanation: 'highの最上級highestを使います。',
+    explanation: 'highの最上級highestを使います。最上級には the を付けます。範囲は in Japan（場所・集団）です。high-higher-highest と変化します。',
     translationJa: '富士山は日本で一番高い山です。',
   },
   {
@@ -1184,7 +1238,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'The letter ___ by my grandfather in 1965.',
     choices: ['wrote', 'was written', 'is written', 'writes'],
     correctAnswer: 'was written',
-    explanation: '過去の受動態はwas/were＋過去分詞です。',
+    explanation: '過去の受動態はwas/were＋過去分詞です。手紙は「書かれた」側なので受け身です。in 1965 から過去なので was を使います。',
+    whyOthersWrong: [
+      'wrote: 能動態では「手紙が書いた」になってしまいます。',
+      '(正解)',
+      'is written: in 1965 があるので現在形は合いません。',
+      'writes: 能動態・現在形で、意味も時制も合いません。',
+    ],
     translationJa: 'その手紙は1965年に私の祖父によって書かれました。',
   },
   {
@@ -1229,7 +1289,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: '次の日本語を英語にしなさい: 「この歌は世界中で歌われています。」',
     correctAnswer: 'This song is sung around the world.',
-    explanation: '現在の受動態はis/are＋過去分詞です。',
+    explanation: '現在の受動態はis/are＋過去分詞です。sing-sang-sung と変化します。動作主（people）が一般の人々なので by ... は省略します。all over the world でも同じ意味です。',
     translationJa: 'この歌は世界中で歌われています。',
   },
   {
@@ -1251,9 +1311,15 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '受動態',
     question: 'The package ___ delivered tomorrow.',
-    choices: ['will', 'will be', 'is being', 'was'],
+    choices: ['will', 'will be', 'has been', 'was'],
     correctAnswer: 'will be',
-    explanation: '未来の受動態はwill be＋過去分詞です。',
+    explanation: '未来の受動態はwill be＋過去分詞です。荷物は「配達される」側なので受け身にします。tomorrow なので will be delivered です。',
+    whyOthersWrong: [
+      'will: will delivered では受け身になりません（will be delivered）。',
+      '(正解)',
+      'has been: 現在完了は tomorrow と一緒に使えません。',
+      'was: 過去形は tomorrow と合いません。',
+    ],
     translationJa: 'その荷物は明日配達されます。',
   },
   {
@@ -1265,7 +1331,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '正しい文を選びなさい',
     choices: ['The cake was made by her.', 'The cake made by her.', 'The cake was make by her.', 'The cake is made by her yesterday.'],
     correctAnswer: 'The cake was made by her.',
-    explanation: '過去の受動態はwas/were＋過去分詞です。',
+    explanation: '過去の受動態はwas/were＋過去分詞です。受け身は be動詞＋過去分詞の両方が必要です。',
+    whyOthersWrong: [
+      '(正解)',
+      'The cake made by her: be動詞がないので文になりません（名詞句「彼女が作ったケーキ」）。',
+      'was make: be動詞の後は過去分詞 made です。',
+      'is made ... yesterday: yesterday と現在形は合いません。',
+    ],
     translationJa: 'そのケーキは彼女によって作られました。',
   },
   {
@@ -1276,7 +1348,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: 'This medicine should ___ (take) with food.',
     correctAnswer: 'be taken',
-    explanation: '助動詞の後の受動態はbe＋過去分詞になります。',
+    explanation: '助動詞の後の受動態はbe＋過去分詞になります。助動詞の後は原形なので be を置き、その後に過去分詞 taken を続けます（should be taken）。薬の説明書でよく見る形です。',
     translationJa: 'この薬は食事と一緒に服用されるべきです。',
   },
   {
@@ -1288,7 +1360,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'Many jobs ___ replaced by machines in the future.',
     choices: ['will', 'will be', 'are', 'were'],
     correctAnswer: 'will be',
-    explanation: '未来の受動態はwill be＋過去分詞です。',
+    explanation: '未来の受動態はwill be＋過去分詞です。仕事は機械に「置き換えられる」側です。in the future なので will be replaced です。',
+    whyOthersWrong: [
+      'will: will replaced では受け身になりません。',
+      '(正解)',
+      'are: 現在形は in the future と合いません。',
+      'were: 過去形は in the future と合いません。',
+    ],
     translationJa: '将来、多くの仕事が機械に置き換えられるでしょう。',
   },
   {
@@ -1357,7 +1435,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '関係代名詞',
     question: '次の日本語を英語にしなさい: 「これは私が探していた本です。」',
     correctAnswer: 'This is the book that I was looking for.',
-    explanation: '関係代名詞thatは人にも物にも使えます。',
+    explanation: '関係代名詞thatは人にも物にも使えます。This is the book I was looking for. と目的格の関係代名詞は省略できます。物なら which も使えます。look for の for を落とさないようにします。',
     translationJa: 'これは私が探していた本です。',
   },
   {
@@ -1484,7 +1562,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '条件文',
     question: 'If you have any questions, please ___ (feel) free to ask.',
     correctAnswer: 'feel',
-    explanation: '主節が命令文の場合、動詞は原形のままです。',
+    explanation: '主節が命令文の場合、動詞は原形のままです。please の後の動詞は原形です（please feel free to ask）。if 節は条件、主節は依頼の命令文という組み立てです。',
     translationJa: '質問があれば、遠慮なく聞いてください。',
   },
   {
@@ -1507,7 +1585,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '条件文',
     question: '次の文の誤りを直しなさい: "If it will rain, we will stay home."',
     correctAnswer: 'If it rains, we will stay home.',
-    explanation: '条件を表すif節の中ではwillを使いません。',
+    explanation: '条件を表すif節の中ではwillを使いません。時・条件を表す if / when の節では、未来のことでも現在形を使います。主節の will はそのままです。',
     translationJa: 'もし雨が降れば、私たちは家にいます。',
   },
   {
@@ -1553,7 +1631,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '仮定法',
     question: 'If she knew the truth, she ___ (be) very upset.',
     correctAnswer: 'would be',
-    explanation: '仮定法過去の帰結節はwould＋動詞の原形です。',
+    explanation: '仮定法過去の帰結節はwould＋動詞の原形です。if 節は過去形（knew）でも、意味は現在の事実と違う仮定です。would の代わりに could / might も使えます。',
     translationJa: 'もし彼女が真実を知ったら、とても動揺するだろう。',
   },
   {
@@ -1587,7 +1665,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '仮定法',
     question: '次の日本語を英語にしなさい: 「もっと時間があれば、もっと旅行するのに。」',
     correctAnswer: 'If I had more time, I would travel more.',
-    explanation: '現在の事実に反する仮定は仮定法過去で表します。',
+    explanation: '現在の事実に反する仮定は仮定法過去で表します。形は If ＋主語＋過去形, 主語＋would＋原形。実際は時間がないという気持ちを表します。If I have more time, I will travel more. は「時間ができたら旅行する」という実現可能な条件になります。',
     translationJa: 'もっと時間があれば、もっと旅行するのに。',
   },
   {
@@ -1612,6 +1690,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['should', 'can', 'must', 'will'],
     correctAnswer: 'should',
     explanation: '"should have + 過去分詞"は「〜すべきだったのに（しなかった）」という過去の後悔を表します。',
+    whyOthersWrong: [
+      '(正解)',
+      'can: can have called は使われず、後悔の意味になりません。',
+      'must: must have called は「電話したに違いない」という推量で、後悔の意味になりません。',
+      'will: will have called は未来完了で文意に合いません。',
+    ],
     translationJa: 'もっと早く電話してくれればよかったのに。心配しましたよ。',
   },
   {
@@ -1631,10 +1715,16 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     level: 2,
     format: 'choice4',
     tag: '助動詞',
-    question: 'You ___ have finished by now; it\'s been three hours.',
+    question: 'You ___ have finished by now, but you are still working on it.',
     choices: ['should', 'must', 'may', 'can'],
     correctAnswer: 'should',
-    explanation: '"should have + 過去分詞"は「〜しているはずだ」という期待にも使えます。',
+    explanation: 'should have＋過去分詞は「（本来なら）もう〜しているはずだ（のに）」という期待を表します。まだ作業中なので、確信の must have（〜したに違いない）は合いません。',
+    whyOthersWrong: [
+      '(正解)',
+      'must: must have finished は「終えたに違いない」で、まだ作業中という後半と矛盾します。',
+      'may: may have finished は「終えたかもしれない」で、後半と合いません。',
+      'can: can have finished は通常使いません（否定の can\'t have なら可）。',
+    ],
     translationJa: '3時間も経っているのだから、あなたはもう終わっているはずです。',
   },
   {
@@ -1867,6 +1957,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['would have', 'will have', 'would', 'has'],
     correctAnswer: 'would have',
     explanation: '仮定法過去完了はwould have+過去分詞で「〜していただろう」を表します。',
+    whyOthersWrong: [
+      '(正解)',
+      'will have: 仮定法過去完了の主節は would have です。',
+      'would: would passed という形はありません。',
+      'has: has passed は現在完了で、仮定の意味になりません。',
+    ],
     translationJa: 'もっと熱心に勉強していたら、彼女は試験に合格していただろう。',
   },
   {
@@ -1891,6 +1987,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['will', 'would', "won't", "wouldn't"],
     correctAnswer: 'will',
     explanation: 'unlessは「〜しない限り」という意味で、if not と同じ働きをします。',
+    whyOthersWrong: [
+      '(正解)',
+      'would: unless の文は現実の条件なので will を使います。',
+      'won\'t: unless は「〜しない限り」と否定を含むので、won\'t では意味が逆になります。',
+      'wouldn\'t: 仮定法ではなく、意味も逆になります。',
+    ],
     translationJa: '急がない限り、あなたは電車に乗り遅れるでしょう。',
   },
   {
@@ -1914,7 +2016,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '___ regularly is important for your health.',
     choices: ['Exercising', 'Exercise', 'Exercised', 'To exercising'],
     correctAnswer: 'Exercising',
-    explanation: '動名詞は文の主語になることができます。',
+    explanation: '動名詞は文の主語になることができます。動名詞の主語は単数扱いなので、動詞は is です。',
+    whyOthersWrong: [
+      '(正解)',
+      'Exercise: 名詞としては使えますが、後ろに regularly（副詞）を続けられません（Regular exercise なら可）。',
+      'Exercised: 過去形・過去分詞は主語になりません。',
+      'To exercising: to の後は原形です（To exercise なら可）。',
+    ],
     translationJa: '定期的に運動することは健康にとって重要です。',
   },
   {
@@ -1938,6 +2046,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['meeting', 'to meet', 'meet', 'met'],
     correctAnswer: 'meeting',
     explanation: 'remember + ing で「（過去に）〜したことを覚えている」を表します。',
+    whyOthersWrong: [
+      '(正解)',
+      'to meet: remember to do は「（これから）〜するのを忘れない」で、last year と合いません。',
+      'meet: remember の後に原形は置けません。',
+      'met: 過去形は目的語になりません。',
+    ],
     translationJa: '私は去年その会議で彼に会ったことを覚えています。',
   },
   {
@@ -1961,7 +2075,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'Would you mind ___ the window?',
     choices: ['closing', 'close', 'to close', 'closed'],
     correctAnswer: 'closing',
-    explanation: 'mindの後の動詞は動名詞を使います。',
+    explanation: 'mindの後の動詞は動名詞を使います。Would you mind -ing? は「〜していただけますか」という丁寧な依頼です。答えの No, not at all. は「いいですよ」の意味です。',
+    whyOthersWrong: [
+      '(正解)',
+      'close: mind の後に原形は置けません。',
+      'to close: mind は不定詞をとりません。',
+      'closed: 過去形・過去分詞は目的語になりません。',
+    ],
     translationJa: '窓を閉めていただけますか。',
   },
   {
@@ -1973,7 +2093,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '次の語を並べ替えて、正しい英文を作りなさい。',
     tokens: ['She', 'is', 'interested', 'in', 'studying', 'English'],
     correctAnswer: 'She is interested in studying English',
-    explanation: '前置詞inの後には動名詞を置きます。',
+    explanation: '前置詞inの後には動名詞を置きます。be interested in ＋名詞・動名詞の形で覚えます。interested to study とは通常言いません。',
     translationJa: '彼女は英語を勉強することに興味があります。',
   },
   {
@@ -1985,7 +2105,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'I decided ___ a new hobby.',
     choices: ['to start', 'starting', 'start', 'started'],
     correctAnswer: 'to start',
-    explanation: 'decideの後の動詞はto不定詞を使います。',
+    explanation: 'decideの後の動詞はto不定詞を使います。decide は未来に向かう行為を表すので to 不定詞をとります。',
+    whyOthersWrong: [
+      '(正解)',
+      'starting: decide は動名詞をとりません。',
+      'start: 動詞の後に原形を続けられません。',
+      'started: 過去形は目的語になりません。',
+    ],
     translationJa: '私は新しい趣味を始めることに決めました。',
   },
   {
@@ -2032,7 +2158,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'He was surprised ___ the news.',
     choices: ['to hear', 'hearing', 'hear', 'heard'],
     correctAnswer: 'to hear',
-    explanation: '感情の原因を表す不定詞の副詞的用法です。',
+    explanation: '感情の原因を表す不定詞の副詞的用法です。be surprised to do で「〜して驚く」。感情の原因は at ＋名詞でも表せます（surprised at the news）。',
+    whyOthersWrong: [
+      '(正解)',
+      'hearing: 前置詞なしで動名詞は続けられません。',
+      'hear: 原形は続けられません。',
+      'heard: 過去形は続けられません。',
+    ],
     translationJa: '彼はその知らせを聞いて驚きました。',
   },
   {
@@ -2057,6 +2189,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['should', 'can', 'may', 'will'],
     correctAnswer: 'should',
     explanation: 'should have+過去分詞で「〜すべきだったのに（しなかった）」という後悔を表します。',
+    whyOthersWrong: [
+      '(正解)',
+      'can: can have called は使われず、後悔の意味になりません。',
+      'may: may have called は「電話したかもしれない」という推量です。',
+      'will: will have called は未来完了です。',
+    ],
     translationJa: 'もっと早く電話してくれればよかったのに。心配していました。',
   },
   {
@@ -2077,9 +2215,15 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '助動詞',
     question: 'It ___ rain later, so bring an umbrella.',
-    choices: ['might', 'must', 'should', 'need'],
+    choices: ['might', 'must', 'ought', 'need'],
     correctAnswer: 'might',
     explanation: 'mightは「〜かもしれない」という弱い推量を表します。',
+    whyOthersWrong: [
+      '(正解)',
+      'must: 「〜に違いない」という強い確信で、傘を勧める文脈と合いません。',
+      'ought: ought は ought to の形で使います。',
+      'need: need rain という形はありません。',
+    ],
     translationJa: '後で雨が降るかもしれないので、傘を持って行ってください。',
   },
   {
@@ -2104,6 +2248,12 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     choices: ['May', 'Do', 'Am', 'Will'],
     correctAnswer: 'May',
     explanation: '許可を求めるときはMay I ...?を使います。',
+    whyOthersWrong: [
+      '(正解)',
+      'Do: Do I open ...? は手順を確認する文になり、許可を求める表現ではありません。',
+      'Am: be動詞の疑問文で、open を続けられません。',
+      'Will: Will I open ...? は自分の未来を尋ねる文になります。',
+    ],
     translationJa: '窓を開けてもいいですか。—もちろん、どうぞ。',
   },
   {
@@ -2125,9 +2275,15 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '分詞',
     question: 'The ___ leaves covered the ground in autumn.',
-    choices: ['fallen', 'falling', 'fall', 'falls'],
+    choices: ['fallen', 'fall', 'falls', 'fell'],
     correctAnswer: 'fallen',
-    explanation: '「落ちてしまった葉」という完了・受身の意味は過去分詞で表します。',
+    explanation: '「落ちてしまった葉（落ち葉）」は完了の意味の過去分詞 fallen で名詞を修飾します（The falling leaves なら「舞い落ちている葉」）。',
+    whyOthersWrong: [
+      '(正解)',
+      'fall: 動詞の原形は名詞を修飾できません。',
+      'falls: 三単現の形は名詞を修飾できません。',
+      'fell: 過去形は名詞を修飾できません。',
+    ],
     translationJa: '秋には落ち葉が地面を覆っていました。',
   },
   {
@@ -2138,7 +2294,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '分詞',
     question: '___ (see) from the plane, the city looked beautiful.',
     correctAnswer: 'Seen',
-    explanation: '分詞構文の受け身は過去分詞で始めます。',
+    explanation: '分詞構文の受け身は過去分詞で始めます。主語 the city は「見られる」側なので過去分詞 Seen です。Seeing from the plane, ... とすると街が見ていることになります。',
     translationJa: '飛行機から見ると、その街は美しく見えました。',
   },
   {
@@ -2174,7 +2330,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '___ tired, she went to bed early.',
     choices: ['Feeling', 'Feel', 'Felt', 'Feels'],
     correctAnswer: 'Feeling',
-    explanation: '分詞構文で、理由を表す現在分詞から始めています。',
+    explanation: '分詞構文で、理由を表す現在分詞から始めています。分詞構文は Because she felt tired, ... を短くした形です。主語 she が「感じる」側なので現在分詞です。',
+    whyOthersWrong: [
+      '(正解)',
+      'Feel: 原形で始めると命令文になります。',
+      'Felt: 過去分詞で始めると「感じられた」という受け身の意味になります。',
+      'Feels: 主語のない -s 形は使えません。',
+    ],
     translationJa: '疲れを感じたので、彼女は早く寝ました。',
   },
   {
@@ -2209,7 +2371,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     tag: '受動態',
     question: 'This bridge ___ (build) in 1990.',
     correctAnswer: 'was built',
-    explanation: '過去の受動態はwas/were+過去分詞です。',
+    explanation: '過去の受動態はwas/were+過去分詞です。build-built-built と変化します。in 1990 があるので過去の受け身 was built です。',
     translationJa: 'この橋は1990年に建設されました。',
   },
   {
@@ -2221,7 +2383,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'English ___ in many countries around the world.',
     choices: ['is spoken', 'speaks', 'spoke', 'spoken'],
     correctAnswer: 'is spoken',
-    explanation: '現在の受動態はam/is/are+過去分詞です。',
+    explanation: '現在の受動態はam/is/are+過去分詞です。英語は「話される」側です。一般的な事実なので現在形 is spoken を使います。',
+    whyOthersWrong: [
+      '(正解)',
+      'speaks: 能動態では「英語が話す」になります。',
+      'spoke: 過去形・能動態で意味が合いません。',
+      'spoken: be動詞がないと文の動詞になりません。',
+    ],
     translationJa: '英語は世界中の多くの国で話されています。',
   },
   {
@@ -2257,7 +2425,7 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: '次の語を並べ替えて、正しい英文を作りなさい。',
     tokens: ['The', 'book', 'is', 'read', 'by', 'many', 'students'],
     correctAnswer: 'The book is read by many students',
-    explanation: '受動態の動作主はby〜で表します。',
+    explanation: '受動態の動作主はby〜で表します。The book is read by many students. の read は過去分詞（発音は /red/）です。動作主が重要でなければ by ... は省きます。',
     translationJa: 'その本は多くの学生に読まれています。',
   },
   {
@@ -2269,7 +2437,13 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     question: 'I have never ___ sushi before.',
     choices: ['eaten', 'ate', 'eat', 'eating'],
     correctAnswer: 'eaten',
-    explanation: '現在完了形はhave/has+過去分詞の形です。',
+    explanation: '現在完了形はhave/has+過去分詞の形です。never は have と過去分詞の間に置きます。経験を表す現在完了で、eat-ate-eaten と変化します。',
+    whyOthersWrong: [
+      '(正解)',
+      'ate: have の後に過去形は置けません。',
+      'eat: have の後に原形は置けません。',
+      'eating: have eating という形はありません。',
+    ],
     translationJa: '私はこれまで一度も寿司を食べたことがありません。',
   },
   {
@@ -2479,9 +2653,15 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '仮定法',
     question: 'He talks as if he ___ everything.',
-    choices: ['knew', 'knows', 'known', 'knowing'],
+    choices: ['knew', 'know', 'known', 'knowing'],
     correctAnswer: 'knew',
-    explanation: 'as if+仮定法過去で「まるで〜であるかのように」を表します。',
+    explanation: 'as if+仮定法過去で「まるで〜であるかのように」を表します。現実と違うと話し手が考えるときに過去形を使います（本当にそうかもしれない場合は as if he knows も使われます）。',
+    whyOthersWrong: [
+      '(正解)',
+      'know: 主語 he に合わず、仮定の意味にもなりません。',
+      'known: 過去分詞だけでは文の動詞になりません。',
+      'knowing: -ing 形だけでは文の動詞になりません。',
+    ],
     translationJa: '彼はまるで全てを知っているかのように話します。',
   },
   {
@@ -2537,10 +2717,16 @@ export const level2GrammarQuestions: GrammarQuestion[] = [
     level: 2,
     format: 'choice4',
     tag: '時制',
-    question: 'She ___ to Paris three times.',
+    question: 'She ___ to Paris three times so far.',
     choices: ['has been', 'was', 'is', 'went'],
     correctAnswer: 'has been',
-    explanation: '経験を表す現在完了はhave/has been toで「〜に行ったことがある」を表します。',
+    explanation: 'so far（これまでに）と回数 three times は「経験」を表すので、現在完了 has been to（〜に行ったことがある）を使います。',
+    whyOthersWrong: [
+      '(正解)',
+      'was: was to Paris という形はなく、so far とも合いません。',
+      'is: is to Paris は「パリへ行く予定」の意味になり、so far と合いません。',
+      'went: 過去形は so far（今までに）と一緒に使いません。',
+    ],
     translationJa: '彼女はパリに3回行ったことがあります。',
   },
   {

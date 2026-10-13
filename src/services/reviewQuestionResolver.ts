@@ -15,6 +15,13 @@ import { loadVocabularyLevel } from '../data/vocabulary/loader';
 import { loadWritingById } from '../data/writing/loader';
 import { flattenToeicQuestions } from './toeicService';
 import { generateVocabQuiz } from './vocabularyQuiz';
+import { isRetentionCheck } from './reviewSelector';
+import { canonicalQuestionId, isRetiredQuestion } from '../data/grammar/duplicates';
+import { drillStepTask, parseStepRefId, type SentenceTask } from './sentenceBuildingService';
+import { loadSentenceBuildDrills } from '../data/sentenceBuilding/loader';
+import { loadResearchUnits } from '../data/research/loader';
+import { researchWritingTask } from './researchService';
+import { getAllReviewItems } from '../db/repositories/reviewRepository';
 import { pickRandom, shuffle } from '../utils/random';
 import {
   CUSTOM_WORD_REF_PREFIX,
@@ -39,8 +46,12 @@ export interface ReviewChoiceQuestion {
  * reuse the practice views as-is (they record the answer themselves); `choice` is a
  * plain multiple-choice question that the review screen records. */
 export type ResolvedReviewQuestion =
-  | { kind: 'grammar'; question: GrammarQuestion }
+  /** `variantOf` is set when a similar, not-yet-answered question stands in for the item
+   * (a retention check); the answer then also counts for the original item. */
+  | { kind: 'grammar'; question: GrammarQuestion; variantOf?: string }
   | { kind: 'writing'; exercise: WritingExercise }
+  /** compose-a-sentence task (英文組み立て / 研究英語); the view records the answer itself */
+  | { kind: 'build'; task: SentenceTask }
   | { kind: 'choice'; question: ReviewChoiceQuestion };
 
 function levelFromId(pattern: RegExp, id: string): Level | null {
@@ -133,9 +144,27 @@ export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedR
       if (!level) return null;
       const { questions } = await loadGrammarLevel(level);
       const question = questions.find((q) => q.id === id);
-      return question ? { kind: 'grammar', question } : null;
+      if (!question) return null;
+      if (isRetentionCheck(item)) {
+        const answered = new Set((await getAllReviewItems()).map((i) => canonicalQuestionId(i.refId)));
+        const unseen = questions.filter(
+          (q) => q.tag === question.tag && canonicalQuestionId(q.id) !== canonicalQuestionId(id) && !isRetiredQuestion(q.id) && !answered.has(q.id)
+        );
+        const [variant] = pickRandom(unseen, 1);
+        if (variant) return { kind: 'grammar', question: variant, variantOf: id };
+      }
+      return { kind: 'grammar', question };
     }
     case 'writing': {
+      const step = parseStepRefId(id);
+      if (step) {
+        const drill = (await loadSentenceBuildDrills()).find((d) => d.id === step.drillId);
+        return drill && drill.steps[step.stepIndex] ? { kind: 'build', task: drillStepTask(drill, step.stepIndex) } : null;
+      }
+      if (id.startsWith('rs-')) {
+        const unit = (await loadResearchUnits()).find((u) => `${u.id}-w` === id);
+        return unit ? { kind: 'build', task: researchWritingTask(unit) } : null;
+      }
       const exercise = await loadWritingById(id);
       return exercise ? { kind: 'writing', exercise } : null;
     }
@@ -178,6 +207,22 @@ export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedR
       };
     }
     case 'reading': {
+      if (id.startsWith('rs-')) {
+        const unit = (await loadResearchUnits()).find((u) => `${u.id}-q` === id);
+        if (!unit) return null;
+        return {
+          kind: 'choice',
+          question: {
+            contextTitle: unit.titleJa,
+            contextLines: unit.passage,
+            contextIsPassage: true,
+            prompt: unit.question.question,
+            choices: unit.question.choices,
+            correctIndex: unit.question.correctIndex,
+            explanation: unit.question.explanation,
+          },
+        };
+      }
       const level = levelFromId(/^q-l(\d)-/, id);
       if (!level) return null;
       const { materials, questions } = await loadReadingLevel(level);

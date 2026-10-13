@@ -6,17 +6,31 @@ import ProgressBar from '../components/common/ProgressBar';
 import { useProgress } from '../hooks/useProgress';
 import { getDailyPlan, TOTAL_CURRICULUM_DAYS, type DailyPlan } from '../services/curriculum';
 import { getLevelInfo } from '../data/levels';
-import { getOrCreateTodaySession, TARGET_MINUTES, isSessionComplete } from '../services/sessionService';
+import { getOrCreateTodaySession, isSessionComplete } from '../services/sessionService';
 import { getAllSessions } from '../db/repositories/sessionRepository';
+import { getAllReviewItems } from '../db/repositories/reviewRepository';
+import { getAnswerLogBetween } from '../db/repositories/answerLogRepository';
+import { getAllAssessments, getAssessmentDraft } from '../db/repositories/assessmentRepository';
 import { computeWeeklyMinutes } from '../services/statsService';
-import { greetingForNow } from '../utils/date';
-import type { LearningSession } from '../types';
+import { computeDailyMinutes, type DynamicMinutePlan } from '../services/dailyPlanner';
+import { getTodayReview } from '../services/reviewPlanService';
+import { getOrCreateTodayNoteTasks } from '../services/noteTaskService';
+import { computeWeeklyMissions, weekStart, type Mission } from '../services/missionService';
+import { assessmentStatus } from '../services/assessmentService';
+import { getUnderstandingQuestionsForDay } from '../services/curriculum';
+import { addDaysISO, greetingForNow, todayLocalISODate } from '../utils/date';
+import type { LearningSession, NoteTask } from '../types';
 
 export default function HomePage() {
   const { progress, loading } = useProgress();
   const [session, setSession] = useState<LearningSession | null>(null);
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [weeklyMinutes, setWeeklyMinutes] = useState(0);
+  const [minutes, setMinutes] = useState<DynamicMinutePlan>(() => computeDailyMinutes(false));
+  const [mainNote, setMainNote] = useState<NoteTask | null>(null);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [assessmentDue, setAssessmentDue] = useState(false);
+  const [assessmentInProgress, setAssessmentInProgress] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +41,20 @@ export default function HomePage() {
       setPlan(await getDailyPlan(day));
       const sessions = await getAllSessions();
       setWeeklyMinutes(computeWeeklyMinutes(sessions));
+      const today = todayLocalISODate();
+      const [review, questions, items, log, assessments] = await Promise.all([
+        getTodayReview(),
+        getUnderstandingQuestionsForDay(day),
+        getAllReviewItems(),
+        getAnswerLogBetween(weekStart(today), addDaysISO(weekStart(today), 6)),
+        getAllAssessments(),
+      ]);
+      setMinutes(computeDailyMinutes(review.plan.loadHigh));
+      const notes = await getOrCreateTodayNoteTasks(s, await getDailyPlan(day), questions);
+      setMainNote(notes.find((n) => n.main) ?? null);
+      setMissions(computeWeeklyMissions({ today, sessions: await getAllSessions(), log, items }));
+      setAssessmentDue(assessmentStatus(assessments, today).due);
+      setAssessmentInProgress(!!(await getAssessmentDraft()));
     })();
   }, [progress.currentDay]);
 
@@ -42,10 +70,10 @@ export default function HomePage() {
   const grammarTopicTitle = plan.grammarTheory[0]?.title ?? plan.grammarLessons[0]?.title ?? null;
 
   const sectionRows = [
-    { key: 'reading', label: 'Reading', minutes: TARGET_MINUTES.reading, done: session.sectionsDone.reading },
-    { key: 'grammar', label: 'Grammar', minutes: TARGET_MINUTES.grammar, done: session.sectionsDone.grammar },
-    { key: 'writing', label: 'Writing', minutes: TARGET_MINUTES.writing, done: session.sectionsDone.writing },
-    { key: 'review', label: 'Review', minutes: TARGET_MINUTES.review, done: session.sectionsDone.review },
+    { key: 'reading', label: 'Reading', minutes: minutes.reading, done: session.sectionsDone.reading },
+    { key: 'grammar', label: 'Grammar（新しい知識と演習）', minutes: minutes.grammar, done: session.sectionsDone.grammar },
+    { key: 'writing', label: 'Writing（英文組み立て）', minutes: minutes.writing, done: session.sectionsDone.writing },
+    { key: 'review', label: 'Review', minutes: minutes.review, done: session.sectionsDone.review },
   ] as const;
 
   return (
@@ -86,11 +114,60 @@ export default function HomePage() {
             🎉 今日のトレーニングは完了しました！お疲れさまでした。
           </div>
         ) : (
-          <Button size="lg" className="w-full" onClick={() => navigate('/training')}>
-            Start Today's Training
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button size="lg" className="w-full" onClick={() => navigate('/training')}>
+              Start Today's Training（約{minutes.totalMinutes}分）
+            </Button>
+            <Button variant="secondary" className="w-full" onClick={() => navigate('/quick')}>
+              忙しい日は5分だけ
+            </Button>
+          </div>
         )}
       </Card>
+
+      {(assessmentDue || assessmentInProgress) && (
+        <Link
+          to="/assessment"
+          className="tap-target rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-medium text-violet-800 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300"
+        >
+          {assessmentInProgress ? '📏 実力確認の続きがあります（回答は保存済み）→' : '📏 4週間ごとの実力確認を受けられます（約15分）→'}
+        </Link>
+      )}
+
+      {mainNote && (
+        <Link to="/notes" className="block">
+          <Card className="transition-colors hover:border-emerald-300 dark:hover:border-emerald-700">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">📓 今日のノート課題（約{mainNote.estimatedMinutes}分）</p>
+              <span className="text-xs text-slate-400">{mainNote.selfEval ? '自己評価済み' : '未実施'}</span>
+            </div>
+            <p className="mt-1 text-sm">{mainNote.titleJa}</p>
+          </Card>
+        </Link>
+      )}
+
+      {missions.length > 0 && (
+        <Card>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">今週のミッション</p>
+            <span className="text-xs text-slate-400">
+              {missions.filter((m) => m.done).length} / {missions.length} 達成
+            </span>
+          </div>
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {missions.map((m) => (
+              <li key={m.id} className="flex items-center justify-between gap-2">
+                <span>
+                  {m.done ? '✅' : '⬜️'} {m.titleJa}
+                </span>
+                <span className="shrink-0 text-xs text-slate-400">
+                  {Math.min(m.current, m.target)}/{m.target}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="text-center">
@@ -105,12 +182,12 @@ export default function HomePage() {
 
       <Card>
         <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">今日の進捗</p>
-        <ProgressBar value={(todayMinutes / 30) * 100} label={`${todayMinutes} / 30 分`} />
+        <ProgressBar value={(todayMinutes / minutes.totalMinutes) * 100} label={`${todayMinutes} / ${minutes.totalMinutes} 分`} />
       </Card>
 
       <Card>
         <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">今週の学習時間</p>
-        <ProgressBar value={(weeklyMinutes / (30 * 7)) * 100} label={`${weeklyMinutes} 分 / 週目標 ${30 * 7} 分`} />
+        <ProgressBar value={(weeklyMinutes / (minutes.totalMinutes * 7)) * 100} label={`${weeklyMinutes} 分 / 週目標 ${minutes.totalMinutes * 7} 分`} />
       </Card>
 
       <div>
@@ -127,6 +204,12 @@ export default function HomePage() {
           </Link>
           <Link to="/writing" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
             ✍️ Writing
+          </Link>
+          <Link to="/research" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            🔬 研究英語
+          </Link>
+          <Link to="/notes" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
+            📓 ノート課題
           </Link>
           <Link to="/toeic" className="tap-target rounded-xl border border-slate-200 py-3 dark:border-slate-700">
             📝 TOEIC

@@ -404,7 +404,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '分詞構文',
     question: '次の日本語を英語にしなさい: 「音楽を聴きながら、彼は勉強した。」',
     correctAnswer: 'Listening to music, he studied.',
-    explanation: '「〜しながら」を表す分詞構文です。',
+    explanation: '「〜しながら」を表す分詞構文です。While listening to music, he studied. や He studied while listening to music. と書くと「〜しながら」がよりはっきりします。主語は主節と同じ he です。',
     translationJa: '音楽を聴きながら、彼は勉強した。',
   },
   {
@@ -425,10 +425,16 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     level: 3,
     format: 'choice4',
     tag: '分詞構文',
-    question: '___ time permitting, we will visit the museum too.',
-    choices: ['Weather', 'Time', 'Money', 'Health'],
+    question: '___ permitting, we will visit the museum too.',
+    choices: ['Time', 'Times', 'Timing', 'Timed'],
     correctAnswer: 'Time',
-    explanation: '"time permitting"は「時間が許せば」という独立分詞構文の定型表現です。',
+    explanation: 'Time permitting は「時間が許せば」という独立分詞構文の定型表現です（= If time permits）。Weather permitting（天気が許せば）も同じ形です。',
+    whyOthersWrong: [
+      '(正解)',
+      'Times: 複数形にはしません。',
+      'Timing: 「タイミング」で、定型表現になりません。',
+      'Timed: 過去分詞で、この位置の主語になりません。',
+    ],
     translationJa: '時間が許せば、私たちは博物館も訪れる予定です。',
   },
   {
@@ -474,7 +480,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '分詞構文',
     question: '次の日本語を英語にしなさい: 「その手紙を読んで、彼女は泣き出した。」',
     correctAnswer: 'Reading the letter, she began to cry.',
-    explanation: '時を表す分詞構文（〜すると）です。',
+    explanation: '時を表す分詞構文（〜すると）です。When she read the letter, ... の When と主語を省いた形です。began to cry は began crying でも同じ意味です。',
     translationJa: 'その手紙を読んで、彼女は泣き出した。',
   },
   {
@@ -544,7 +550,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: '正しい語順に並べ替えなさい',
     tokens: ['if', 'it', 'had', 'not', 'rained', 'we', 'would', 'have', 'gone', 'out'],
     correctAnswer: 'If it had not rained, we would have gone out.',
-    explanation: '仮定法過去完了の否定形です。',
+    explanation: '仮定法過去完了の否定形です。過去の事実（実際は雨が降った）と逆の仮定は If ＋had＋過去分詞, would have＋過去分詞 です。否定は had not rained です。',
     translationJa: '雨が降っていなければ、私たちは出かけていただろう。',
   },
   {
@@ -591,6 +597,12 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     choices: ['go', 'went', 'have gone', 'will go'],
     correctAnswer: 'went',
     explanation: '"It is time (that) S+過去形"は「そろそろ〜する時間だ」という仮定法的表現です。',
+    whyOthersWrong: [
+      'go: It is time の後に主語を続けるときは過去形にします（It is time to go. なら可）。',
+      '(正解)',
+      'have gone: 現在完了は使いません。',
+      'will go: will は使いません。',
+    ],
     translationJa: 'そろそろ帰る時間です。',
   },
   {
@@ -611,9 +623,15 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '仮定法',
     question: 'The doctor recommended that the patient ___ more rest.',
-    choices: ['gets', 'get', 'got', 'getting'],
+    choices: ['to get', 'get', 'got', 'getting'],
     correctAnswer: 'get',
-    explanation: 'recommend/suggest that＋主語＋動詞の原形（仮定法現在）という形になります。',
+    explanation: 'recommend/suggest that＋主語＋動詞の原形（仮定法現在）という形になります。（イギリス英語では should get も使われます）',
+    whyOthersWrong: [
+      'to get: that 節の中は主語＋動詞の形にします。',
+      '(正解)',
+      'got: 過去形にはしません（原形を使います）。',
+      'getting: -ing 形だけでは文の動詞になりません。',
+    ],
     translationJa: '医師はその患者にもっと休息を取るよう勧めました。',
   },
   {
@@ -681,7 +699,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '倒置',
     question: '次の日本語を英語にしなさい（倒置を使って）: 「私はそんな話を一度も聞いたことがない。」',
     correctAnswer: 'Never have I heard such a story.',
-    explanation: '否定語Neverを文頭に置く倒置構文です。',
+    explanation: '否定語Neverを文頭に置く倒置構文です。否定語が文頭に出ると、疑問文と同じ語順（have I heard）になります。普通の語順なら I have never heard such a story. です。',
     translationJa: '私はそんな話を一度も聞いたことがない。',
   },
   {
@@ -716,7 +734,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '倒置',
     question: 'Little ___ (know) that the experiment would fail.',
     correctAnswer: 'did we know',
-    explanation: 'Littleを文頭に置く倒置構文です。',
+    explanation: 'Littleを文頭に置く倒置構文です。普通の語順では We little knew ... です。Little を前に出すと did we know と疑問文の語順になり、「〜とは少しも知らなかった」と強く否定します。',
     translationJa: 'その実験が失敗するとは、私たちはほとんど知らなかった。',
   },
   {
@@ -741,6 +759,12 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     choices: ['when', 'that', 'which', 'where'],
     correctAnswer: 'that',
     explanation: '強調構文It is/was 〜 thatの形なのでthatを使います。',
+    whyOthersWrong: [
+      'when: 口語では見られますが、強調構文の基本は that です。',
+      '(正解)',
+      'which: 時を表す語句の強調には使いません。',
+      'where: 場所の強調にも that を使うのが基本です。',
+    ],
     translationJa: 'パンデミックが始まったのは2020年のことだった。',
   },
   {
@@ -751,7 +775,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '強調構文',
     question: 'It ___ (be) the new policy that caused the confusion.',
     correctAnswer: 'was',
-    explanation: '強調構文It was 〜 thatの形です。',
+    explanation: '強調構文It was 〜 thatの形です。It is / was と that の間に強調したい語句を入れ、残りを that 以下に置きます。強調部分を外すと The new policy caused the confusion. に戻ります。',
     translationJa: '混乱を引き起こしたのはその新しい方針だった。',
   },
   {
@@ -806,10 +830,16 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     level: 3,
     format: 'choice4',
     tag: '強調構文',
-    question: 'I ___ do appreciate your help.',
-    choices: ['really', 'do', 'am', 'was'],
+    question: 'I ___ appreciate your help.',
+    choices: ['do', 'am', 'was', 'have'],
     correctAnswer: 'do',
-    explanation: '動詞を強調するときはdo/does/didを動詞の前に置きます。',
+    explanation: '一般動詞の前に do / does / did を置くと、動詞の意味を強めます（I do appreciate = 本当に感謝しています）。',
+    whyOthersWrong: [
+      '(正解)',
+      'am: be動詞の後に動詞の原形は置けません。',
+      'was: be動詞の後に動詞の原形は置けません。',
+      'have: have の後は過去分詞（have appreciated）です。',
+    ],
     translationJa: '私はあなたの助けに本当に感謝しています。',
   },
   {
@@ -820,7 +850,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '強調構文',
     question: 'It was the nurse ___ (who) noticed the change first.',
     correctAnswer: 'who',
-    explanation: '強調構文で人を強調する場合はwhoを使います。',
+    explanation: '強調構文で人を強調する場合はwhoを使います。強調する語句が人なら who、物なら that / which も使えます。that は人・物どちらにも使えます。',
     translationJa: '最初にその変化に気づいたのは看護師だった。',
   },
   {
@@ -902,7 +932,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '接続表現',
     question: 'The plan failed. ___ (as a result), the project was delayed.',
     correctAnswer: 'As a result',
-    explanation: '結果を導く接続表現As a resultです。',
+    explanation: '結果を導く接続表現As a resultです。As a result は前の文を原因として結果を述べます。Therefore / Consequently も同じ働きです。文頭に置いてコンマで区切ります。',
     translationJa: 'その計画は失敗した。その結果、プロジェクトは遅れた。',
   },
   {
@@ -995,7 +1025,13 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: 'Regular exercise ___ better sleep quality.',
     choices: ['leads to', 'leads from', 'results of', 'causes from'],
     correctAnswer: 'leads to',
-    explanation: '「〜につながる」はlead toで表します。',
+    explanation: '「〜につながる」はlead toで表します。「原因 lead to 結果」の順になります。',
+    whyOthersWrong: [
+      '(正解)',
+      'leads from: lead from という因果表現はありません。',
+      'results of: 動詞が必要です（results in なら「〜という結果になる」で可）。',
+      'causes from: cause は他動詞なので from は不要です（causes better sleep なら可）。',
+    ],
     translationJa: '定期的な運動はより良い睡眠の質につながる。',
   },
   {
@@ -1041,7 +1077,13 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: 'The economic downturn was ___ several factors.',
     choices: ['due to', 'depend on', 'leads to', 'result to'],
     correctAnswer: 'due to',
-    explanation: '「〜が原因である」という意味のdue toです。',
+    explanation: '「〜が原因である」という意味のdue toです。be due to ＋名詞で「〜による・〜が原因で」。because of と同じく後ろに名詞を置きます。',
+    whyOthersWrong: [
+      '(正解)',
+      'depend on: was の後に動詞の原形は置けません（depended on なら意味も変わります）。',
+      'leads to: was の後に leads は置けず、方向も逆（原因 → 結果）です。',
+      'result to: result from（〜から生じる）が正しい形で、was の後にも置けません。',
+    ],
     translationJa: 'その経済の低迷はいくつかの要因が原因だった。',
   },
   {
@@ -1075,9 +1117,9 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     format: 'choice4',
     tag: '長い主語',
     question: '"What she said made him angry." のWhat she saidの働きを選びなさい',
-    choices: ['疑問詞節（主語）', '関係代名詞節（修飾語）', '感嘆文', '命令文'],
-    correctAnswer: '疑問詞節（主語）',
-    explanation: 'What she said（彼女が言ったこと）は「〜すること」という名詞節として文の主語になっています。',
+    choices: ['名詞節（主語）', '関係代名詞節（修飾語）', '感嘆文', '命令文'],
+    correctAnswer: '名詞節（主語）',
+    explanation: 'What she said の what は「〜すること・もの」という先行詞を含む関係代名詞で、What she said 全体が名詞節として文の主語になっています（動詞は made）。',
     translationJa: '彼女が言ったことが彼を怒らせた。',
   },
   {
@@ -1087,8 +1129,8 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     format: 'ja-to-en',
     tag: '長い主語',
     question: '次の日本語を英語にしなさい: 「彼がなぜそれをしたのかは誰にも分からない。」',
-    correctAnswer: 'Why he did it is unknown to anyone.',
-    explanation: 'Why he did it（彼がなぜそれをしたか）が名詞節として文の主語になっています。',
+    correctAnswer: 'Why he did it is a mystery to everyone.',
+    explanation: 'Why he did it（彼がなぜそれをしたのか）という名詞節が主語です。「誰にも分からない」は is a mystery to everyone や is unknown で表せます（Nobody knows why he did it. も自然です）。',
     translationJa: '彼がなぜそれをしたのかは誰にも分からない。',
   },
   {
@@ -1112,7 +1154,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: '主語が長い文では、動詞を見つけてから前の部分をまとめて主語として捉えると構造がつかみやすい。',
     choices: ['正しい', '誤り'],
     correctAnswer: '正しい',
-    explanation: '英文読解の重要なテクニックの一つです。',
+    explanation: '英文読解の重要なテクニックの一つです。例: The results of the study that we conducted last year were surprising. では、動詞 were を見つけると、その前全体が主語だとわかります。',
     translationJa: '（文法知識の確認）',
   },
   {
@@ -1282,7 +1324,13 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: 'The bridge collapsed ___ years of neglect.',
     choices: ['because of', 'because', 'so', 'therefore'],
     correctAnswer: 'because of',
-    explanation: 'because ofの後には名詞句が続きます。',
+    explanation: 'because ofの後には名詞句が続きます。years of neglect は名詞句なので前置詞の because of を使います。',
+    whyOthersWrong: [
+      '(正解)',
+      'because: 接続詞なので後ろに主語＋動詞が必要です。',
+      'so: 結果を導く接続詞で、ここでは意味も形も合いません。',
+      'therefore: 副詞なので名詞を後ろに置けません。',
+    ],
     translationJa: 'その橋は何年もの放置が原因で崩壊しました。',
   },
   {
@@ -1318,7 +1366,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: '次の語を並べ替えて、正しい英文を作りなさい。',
     tokens: ['He', 'was', 'absent', 'from', 'work', 'because', 'he', 'was', 'sick'],
     correctAnswer: 'He was absent from work because he was sick',
-    explanation: 'becauseの後に理由を表す節が続きます。',
+    explanation: 'becauseの後に理由を表す節が続きます。Because he was sick, he was absent from work. と because 節を前に置くこともできます。be absent from は「〜を欠席する」です。',
     translationJa: '彼は病気だったので、仕事を休みました。',
   },
   {
@@ -1449,6 +1497,12 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     choices: ['that', 'when', 'which', 'who'],
     correctAnswer: 'that',
     explanation: '時を強調する"It was ... that"構文です。',
+    whyOthersWrong: [
+      '(正解)',
+      'when: 口語では見られますが、強調構文の基本は that です。',
+      'which: 時の強調には使いません。',
+      'who: 人を強調するときに使います。',
+    ],
     translationJa: '壁が崩壊したのは1990年のことでした。',
   },
   {
@@ -1483,7 +1537,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     tag: '倒置',
     question: 'Not only ___ (be) she smart, but she is also kind.',
     correctAnswer: 'is',
-    explanation: 'Not onlyが文頭に来ると倒置が起こります。',
+    explanation: 'Not onlyが文頭に来ると倒置が起こります。普通の語順は She is not only smart but also kind. です。Not only を文頭に出すと is she と疑問文の語順になります。',
     translationJa: '彼女は賢いだけでなく、親切でもあります。',
   },
   {
@@ -1614,7 +1668,13 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: '___ tired from the long flight, she went straight to bed.',
     choices: ['Being', 'Be', 'Been', 'To be'],
     correctAnswer: 'Being',
-    explanation: '分詞構文は現在分詞（ing形）で始めます。',
+    explanation: '分詞構文は現在分詞（ing形）で始めます。Because she was tired, ... を短くした形です。Being は省略して Tired from the long flight, ... と書くこともできます。',
+    whyOthersWrong: [
+      '(正解)',
+      'Be: 原形で始めると命令文になります。',
+      'Been: 過去分詞 been だけで分詞構文は作れません（Having been なら可）。',
+      'To be: 不定詞では理由の意味になりません。',
+    ],
     translationJa: '長時間のフライトで疲れていたので、彼女はすぐにベッドに入りました。',
   },
   {
@@ -1708,7 +1768,13 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: 'Non-restrictive clauses are usually set off by ___.',
     choices: ['commas', 'periods', 'colons', 'semicolons'],
     correctAnswer: 'commas',
-    explanation: '非制限用法の関係詞節は前後をコンマで区切ります。',
+    explanation: '非制限用法の関係詞節は前後をコンマで区切ります。非制限用法は先行詞に「補足情報」を加えるだけなので、コンマで区切り、that は使いません。',
+    whyOthersWrong: [
+      '(正解)',
+      'periods: ピリオドは文を終わらせます。',
+      'colons: コロンは説明や列挙を導きます。',
+      'semicolons: セミコロンは2つの文をつなぎます。',
+    ],
     translationJa: '非制限用法の節は通常コンマで区切られます。',
   },
   {
@@ -1744,7 +1810,7 @@ export const level3GrammarQuestions: GrammarQuestion[] = [
     question: '次の語を並べ替えて、正しい英文を作りなさい。',
     tokens: ['Tokyo', 'which', 'is', 'the', 'capital', 'of', 'Japan', 'is', 'a', 'huge', 'city'],
     correctAnswer: 'Tokyo which is the capital of Japan is a huge city',
-    explanation: '非制限用法の関係詞節が固有名詞Tokyoを補足説明しています。',
+    explanation: '非制限用法の関係詞節が固有名詞Tokyoを補足説明しています。書くときは Tokyo, which is the capital of Japan, is a huge city. とコンマで区切ります。',
     translationJa: '日本の首都である東京は巨大な都市です。',
   },
   {
