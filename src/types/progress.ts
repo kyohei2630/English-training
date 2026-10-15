@@ -93,6 +93,8 @@ export interface NoteTask {
   promptJa: string;
   /** English (or Japanese) text the learner works on, e.g. the sentence to analyse */
   material?: string;
+  /** id of the day's reading passage, so a review of the task can show the passage again */
+  readingId?: string;
   /** model answer / checkpoints shown after the learner has tried */
   modelAnswer: string[];
   estimatedMinutes: number;

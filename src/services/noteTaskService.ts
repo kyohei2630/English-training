@@ -88,6 +88,7 @@ export function buildNoteTasks(plan: DailyPlan, questions: UnderstandingQuestion
       titleJa: '構文分析：今日の本文から1文',
       promptJa: '次の英文をノートに書き写し、主語(S)・動詞(V)・目的語(O)/補語(C)・修飾語(M)に線を引いて記号を書きましょう。最後に和訳します。',
       material: sentence,
+      readingId: plan.reading.id,
       modelAnswer: model,
       estimatedMinutes: 4,
       level,
@@ -102,6 +103,7 @@ export function buildNoteTasks(plan: DailyPlan, questions: UnderstandingQuestion
     titleJa: `内容説明：「${plan.reading.title}」`,
     promptJa:
       '本文を見ずに、①日本語で2〜3文に要約し、②英語で1文（The text is about ... / The main point is that ...）で説明しましょう。書いたら本文と見比べます。',
+    readingId: plan.reading.id,
     modelAnswer: [
       ...(mainIdea ? [`要点: ${mainIdea.choices[mainIdea.correctIndex]}`, mainIdea.explanation] : []),
       `テーマ: ${plan.reading.topic}`,

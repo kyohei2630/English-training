@@ -1,5 +1,6 @@
 import type {
   GrammarPoint,
+  NoteTask,
   GrammarQuestion,
   Level,
   ReadingMaterial,
@@ -22,6 +23,8 @@ import { loadSentenceBuildDrills } from '../data/sentenceBuilding/loader';
 import { loadResearchUnits } from '../data/research/loader';
 import { researchWritingTask } from './researchService';
 import { getAllReviewItems } from '../db/repositories/reviewRepository';
+import { getSessionByDate } from '../db/repositories/sessionRepository';
+import { getDailyPlan } from './curriculum';
 import { pickRandom, shuffle } from '../utils/random';
 import {
   CUSTOM_WORD_REF_PREFIX,
@@ -52,7 +55,9 @@ export type ResolvedReviewQuestion =
   | { kind: 'writing'; exercise: WritingExercise }
   /** compose-a-sentence task (英文組み立て / 研究英語); the view records the answer itself */
   | { kind: 'build'; task: SentenceTask }
-  | { kind: 'choice'; question: ReviewChoiceQuestion };
+  | { kind: 'choice'; question: ReviewChoiceQuestion }
+  /** a paper-notebook task, self-graded like a flip card, with the passage it was made from */
+  | { kind: 'note'; task?: NoteTask; passage?: { title: string; content: string[] } };
 
 function levelFromId(pattern: RegExp, id: string): Level | null {
   const match = pattern.exec(id);
@@ -127,10 +132,30 @@ async function savedWordToChoice(word: SavedWordInfo): Promise<ReviewChoiceQuest
   };
 }
 
+/** A notebook task's review card ("note-YYYY-MM-DD-kind"): the task as stored on that day's
+ * session, plus the reading passage it was made from. Tasks saved before readingId existed find
+ * the passage through that day's curriculum plan. */
+async function resolveNoteTask(refId: string): Promise<ResolvedReviewQuestion | null> {
+  const match = /^note-(\d{4}-\d{2}-\d{2})-(\w+)$/.exec(refId);
+  if (!match) return null;
+  const session = await getSessionByDate(match[1]);
+  const task = session?.noteTasks?.find((t) => t.id === refId);
+  if (match[2] === 'composition') return { kind: 'note', task };
+  if (!session) return { kind: 'note', task };
+  let reading: ReadingMaterial | undefined;
+  if (task?.readingId) {
+    const level = levelFromId(/^l(\d)-/, task.readingId) ?? task.level;
+    reading = (await loadReadingLevel(level)).materials.find((m) => m.id === task.readingId);
+  }
+  reading ??= (await getDailyPlan(session.day)).reading;
+  return { kind: 'note', task, passage: { title: reading.title, content: reading.content } };
+}
+
 /** Looks up the source question for a review item via its refId. Returns null only when the
  * source content no longer exists, which the review screen shows as a flip card instead. */
 export async function resolveReviewQuestion(item: ReviewItem): Promise<ResolvedReviewQuestion | null> {
   const id = item.refId;
+  if (id.startsWith('note-')) return resolveNoteTask(id);
   switch (item.category) {
     case 'grammar': {
       if (id.startsWith('grammar-')) {

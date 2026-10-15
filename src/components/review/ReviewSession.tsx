@@ -122,7 +122,7 @@ function ChoiceReview({ item, question, isLast, onNext }: ReviewQuestionProps & 
 }
 
 /** Fallback for entries with no answerable source (e.g. words bookmarked while reading). */
-function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
+function FlipCardReview({ item, title, onNext }: ReviewQuestionProps & { title?: string }) {
   const [revealed, setRevealed] = useState(false);
 
   const handleAnswer = async (wasCorrect: boolean) => {
@@ -134,7 +134,8 @@ function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
     <>
       <Card>
         <CategoryBadge item={item} />
-        <p className="text-lg leading-relaxed">{item.promptText}</p>
+        {title && <h3 className="mb-2 font-bold">{title}</h3>}
+        <p className="whitespace-pre-line text-lg leading-relaxed">{item.promptText}</p>
 
         {revealed ? (
           <div className="mt-4 rounded-xl bg-blue-50 p-4 text-sm dark:bg-blue-950/40">
@@ -159,6 +160,40 @@ function FlipCardReview({ item, onNext }: ReviewQuestionProps) {
           </Button>
         </div>
       )}
+    </>
+  );
+}
+
+/** A notebook task from an earlier day: the passage it was made from (collapsible, since the
+ * 内容説明 task is written without looking), then the task as a self-graded flip card. */
+function NoteReview({ item, source, isLast, onNext }: ReviewQuestionProps & { source: Extract<ResolvedReviewQuestion, { kind: 'note' }> }) {
+  const [showPassage, setShowPassage] = useState(true);
+  const { passage, task } = source;
+  return (
+    <>
+      {passage && (
+        <WordLookupProvider level={item.level}>
+          <Card className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">この課題の本文</p>
+                <h2 className="text-xl font-bold">{passage.title}</h2>
+              </div>
+              <Button variant="secondary" className="shrink-0 px-3 py-1.5 text-sm" onClick={() => setShowPassage((v) => !v)}>
+                {showPassage ? '本文を閉じる' : '本文を表示'}
+              </Button>
+            </div>
+            {showPassage &&
+              passage.content.map((paragraph, i) => (
+                <WordInteractiveText key={i} text={paragraph} className="text-base leading-relaxed" />
+              ))}
+            {showPassage && task?.kind === 'explanation' && (
+              <p className="text-sm text-slate-500">読み終えたら本文を閉じて、ノートに要約しましょう。</p>
+            )}
+          </Card>
+        </WordLookupProvider>
+      )}
+      <FlipCardReview item={item} title={task?.titleJa} isLast={isLast} onNext={onNext} />
     </>
   );
 }
@@ -235,6 +270,8 @@ export default function ReviewSession({ items, onComplete, onAnswered, progressO
     body = <div className="py-10 text-center text-slate-400">読み込み中...</div>;
   } else if (source === null) {
     body = <FlipCardReview key={item.id} item={item} isLast={isLast} onNext={handleNext} />;
+  } else if (source.kind === 'note') {
+    body = <NoteReview key={item.id} item={item} source={source} isLast={isLast} onNext={handleNext} />;
   } else if (source.kind === 'grammar') {
     // GrammarQuestionView records the answer to the review deck itself (same refId).
     body = (
